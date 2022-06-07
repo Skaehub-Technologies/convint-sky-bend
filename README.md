@@ -1,10 +1,9 @@
-CONVINT 
+CONVINT
 =======
 
 ## Vision
 
 
----
 ## API Documentation
 
 
@@ -14,6 +13,7 @@ CONVINT
 The preferred JSON object to be returned by the API should be structured as follows:
 
 ### Users (for authentication)
+
 
 ```source-json
 {
@@ -393,3 +393,8 @@ No additional parameters required
 ### Get Tags
 
 `GET /api/tags`
+
+
+
+After configuration is complete, run the following command to complete the installation:`pre-commit install`
+Finally, before executing Git commit , run the following command:`pre-commit run --all-files`
