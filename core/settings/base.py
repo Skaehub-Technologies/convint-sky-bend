@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import List
 
 from dotenv import load_dotenv
 
@@ -7,7 +8,7 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ALLOWED_HOSTS = [""]
+ALLOWED_HOSTS: List[str] = []
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
