@@ -38,7 +38,6 @@ Django==4.0.5
 django-filter==21.1
 django-import-export==2.8.0
 djangorestframework==3.13.1
-en-south-biospacy-sm==2.3.1
 entrypoints==0.4
 enum-compat==0.0.3
 et-xmlfile==1.1.0
