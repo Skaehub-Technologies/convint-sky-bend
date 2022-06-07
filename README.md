@@ -14,6 +14,7 @@ The preferred JSON object to be returned by the API should be structured as foll
 
 ### Users (for authentication)
 
+
 ```source-json
 {
   "user": {
