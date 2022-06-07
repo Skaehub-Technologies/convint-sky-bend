@@ -3,7 +3,7 @@ CONVINT
 
 ## Vision
 
----
+
 ## API Documentation
 
 
@@ -392,3 +392,10 @@ No additional parameters required
 ### Get Tags
 
 `GET /api/tags`
+
+
+
+After configuration is complete, run the following command to complete the installation:`pre-commit install`
+Finally, before executing Git commit , run the following command:`pre-commit run --all-files`
+
+
