@@ -39,5 +39,7 @@ repos:
           djangorestframework-stubs,
           django-stubs,
           python-dotenv,
+          'djangorestframework',
           # runtime dependencies
+          'psycopg2-binary',
       ]

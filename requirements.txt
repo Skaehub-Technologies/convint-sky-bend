@@ -7,4 +7,4 @@ isort==5.10.1
 mypy==0.812
 pre-commit==2.19.0
 six==1.16.0
-
+psycopg2-binary

@@ -400,3 +400,4 @@ After configuration is complete, run the following command to complete the insta
 Finally, before executing Git commit , run the following command:`pre-commit run --all-files`
 
 
+![Screenshot of the running server](convint.png)
