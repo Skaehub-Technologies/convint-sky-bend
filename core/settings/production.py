@@ -1,4 +1,5 @@
 DEBUG = False
 
-ALLOWED_HOSTS = [""]
+#e.g AWS
+ALLOWED_HOSTS += [""]
 
