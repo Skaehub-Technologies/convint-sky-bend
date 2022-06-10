@@ -6,9 +6,9 @@ from .views import UserTokenObtainPairView
 
 urlpatterns = [
     path(
-        "api/auth/login",
+        "login/",
         UserTokenObtainPairView.as_view(),
         name="login",
     ),
-    path("api/auth/refresh/", TokenRefreshView.as_view(), name="refresh"),
+    path("refresh/", TokenRefreshView.as_view(), name="refresh"),
 ]

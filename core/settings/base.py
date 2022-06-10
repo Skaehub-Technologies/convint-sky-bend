@@ -147,4 +147,4 @@ SIMPLE_JWT = {
 }
 
 # custom user and authentication setup
-AUTH_USER_MODEL = "Users.User"
+AUTH_USER_MODEL = "users.User"
