@@ -58,7 +58,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         return self.email
 
 
-class Profile(TimeStampedModel, models.Model):
+class Profile(TimeStampedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(max_length=500, blank=True)
     image = models.ImageField(upload_to="profile_pics", blank=True)
