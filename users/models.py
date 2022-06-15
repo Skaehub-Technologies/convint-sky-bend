@@ -7,8 +7,6 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 
-# Create your models here.
-
 
 class UserManager(BaseUserManager):
     def create_user(self, email: str, password: str, **kwargs: Any) -> Any:
