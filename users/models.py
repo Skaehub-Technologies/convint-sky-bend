@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-
+from typing import Any
 
 # Create your models here.
 
@@ -24,12 +24,25 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self,email,password=None,**kwargs):  
-        user =self.create_user(email,password=password,**kwargs)
-        user.is_staff=True
-        user.is_superuser=True
-        user.save(using=self._db)
-        return user
+    # def create_superuser(self,email,password=None,**kwargs):  
+    #     user =self.create_superuser(email,password,**kwargs)
+    #     user.is_staff=True
+    #     user.is_superuser=True
+    #     user.save(using=self._db)
+    #     return user
+
+    def create_superuser(
+        self, email: str, password: str, **kwargs: Any) -> Any:
+        kwargs.setdefault("is_staff", True)
+        kwargs.setdefault("is_superuser", True)
+        if not password:
+            raise ValueError("Password is required")
+        if kwargs.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff (is_staff= True)")
+        if kwargs.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser(is_superuser = True)")
+        return self.create_user(email, password, **kwargs)
+    
 
 class User(AbstractBaseUser, PermissionsMixin):
         username = models.CharField(max_length=255,unique=True)
@@ -42,7 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         objects = UserManager()
         
-        USERNAME_FIELD= 'email'
+        USERNAME_FIELD= 'email' 
         REQUIRED_FIELDS= ['username']
 
         def __str__(self) -> str:
