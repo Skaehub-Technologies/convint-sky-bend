@@ -7,6 +7,8 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 
+from users.abstracts import TimeStampedModel
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email: str, password: str, **kwargs: Any) -> Any:
@@ -17,13 +19,13 @@ class UserManager(BaseUserManager):
 
         user = self.model(email=self.normalize_email(email).lower(), **kwargs)
         user.set_password(password)
-        user.save(using=self._db)
+        user.save()
         return user
 
     def create_editor(self, email: str, password: str, **kwargs: Any) -> Any:
         user = self.create_user(email, password=password, **kwargs)
         user.is_editor = True
-        user.save(using=self._db)
+        user.save()
         return user
 
     def create_superuser(
@@ -32,11 +34,11 @@ class UserManager(BaseUserManager):
         user = self.create_user(email, password=password, **kwargs)
         user.is_staff = True
         user.is_superuser = True
-        user.save(using=self._db)
+        user.save()
         return user
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     username = models.CharField(max_length=255, unique=True)
     email = models.CharField(
         max_length=255, unique=True, verbose_name="user email"
@@ -56,7 +58,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-class Profile(models.Model):
+class Profile(TimeStampedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(max_length=500, blank=True)
     image = models.ImageField(upload_to="profile_pics", blank=True)
