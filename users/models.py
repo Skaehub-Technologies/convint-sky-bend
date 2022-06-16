@@ -18,11 +18,11 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
     
-    def create_editor(self,email,password=None,**kwargs): 
-        user =self.create_user(email,password=password,**kwargs)
-        user.is_editor=True
-        user.save(using=self._db)
-        return user
+    def create_editor(self,email,password=None,**kwargs: Any) -> Any: 
+        kwargs.setdefault('is_editor', True)
+        if kwargs.get('is_editor') is not True:
+            raise ValueError ('Error! Not an editor')
+        return self.create_editor(email, password, **kwargs)
 
     def create_superuser(
         self, email: str, password: str, **kwargs: Any) -> Any:

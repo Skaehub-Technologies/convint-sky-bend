@@ -10,8 +10,8 @@ class UserModelTest(TestCase):
         user = Member.objects.create_user(
             email="test@test.com", password="hello"
         )
-        user.save()
         self.assertEqual(user.email, "test@test.com")
+        
     
     def test_password_exception_raised(self):
            with self.assertRaises(ValueError):
@@ -28,13 +28,13 @@ class UserModelTest(TestCase):
                 email = '',
                 password = '123345'
             )
-            
-        
-    def test_create_editor(self):
-        editor = Member.objects.create_editor(
-            email = 'example@ex.com', password = '123456'
+       
+    def test_is_editor(self):
+        with self.assertRaises(ValueError):
+            Member.objects.create_editor(
+            email = 'example@ex.com', password = '123456', is_editor =False
         )
-        self.assertEqual(editor.email, 'example@ex.com')
+
 
     def test_superuser(self):
         super_user = Member.objects.create_superuser(email= 'test@test.com', password='1234')
