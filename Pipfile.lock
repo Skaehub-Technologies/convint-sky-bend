@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "edc244b467452f8be67216f58756b5141eac326e9cac6622cd0d71a1ee9adbc2"
+            "sha256": "b2fd8513bdee50e48cd8a10b21d46ed9e2c0ab8756776e4d4d3238d865493754"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -108,6 +108,14 @@
             ],
             "index": "pypi",
             "version": "==5.2.0"
+        },
+        "faker": {
+            "hashes": [
+                "sha256:638b9c362e77bcd8212f0d1434c1940f1e8d6c336fe949add563ba0a154b6310",
+                "sha256:f192d238b3b6acb98ee85bd596258a15a171385613b30a7849e5845f8980d722"
+            ],
+            "index": "pypi",
+            "version": "==13.13.0"
         },
         "filelock": {
             "hashes": [
@@ -347,6 +355,14 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==2.4.0"
+        },
+        "python-dateutil": {
+            "hashes": [
+                "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86",
+                "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "version": "==2.8.2"
         },
         "python-dotenv": {
             "hashes": [
