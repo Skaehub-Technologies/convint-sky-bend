@@ -23,7 +23,6 @@ jobs:
           command: |
             black .
             isort .
-        
       - run:
           name: run tests
           command: pytest 
