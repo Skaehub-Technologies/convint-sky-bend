@@ -23,9 +23,11 @@ jobs:
           command: |
             black .
             isort .
+            flake8 .
+            mypy .
       - run:
           name: run tests
-          command: pytest --cov
+          command: pytest 
 
 workflows:
   lint-and-test-workflow:
