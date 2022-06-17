@@ -27,7 +27,7 @@ jobs:
             mypy .
       - run:
           name: run tests
-          command: pytest 
+          command: pytest --cov
 
 workflows:
   lint-and-test-workflow:
