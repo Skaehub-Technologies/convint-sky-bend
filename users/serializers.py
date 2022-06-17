@@ -1,6 +1,7 @@
 from typing import Any
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.contrib import messages
 from .models import Profile
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -22,9 +23,13 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data: Any) -> Any:
         user = User.objects.create_user(**validated_data)
         Profile.objects.create(user=user)
+        User.email_user(
+            '0','Registration Successful',
+         'You have successfully regsitered your accout',
+         'convint@cv.io',
+          [user.email]
+         )
+        messages.success(self.context.get('request'), 'Registration Successful. Proceed to Login to get your token')
         return user
 
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ('user', 'bio', 'image')
+

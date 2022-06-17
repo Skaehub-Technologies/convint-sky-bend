@@ -6,6 +6,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.db import models
+from django.core.mail import send_mail
 
 from users.abstracts import TimeStampedModel
 
@@ -56,6 +57,10 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
     def __str__(self) -> str:
         return self.email
+
+    def email_user(self, subject: str, message: str, from_email: str,email: str) -> None:
+        send_mail(subject, message, from_email, email)
+
 
 
 class Profile(TimeStampedModel):
