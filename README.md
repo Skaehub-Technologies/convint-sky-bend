@@ -1,6 +1,9 @@
 CONVINT
 =======
 
+
+[![Skaehub-Technologies](https://circleci.com/gh/Skaehub-Technologies/convint-sky-bend.svg?style=svg)](https://app.circleci.com/pipelines/github/Skaehub-Technologies/convint-sky-bend)
+
 ## Vision
 
 
