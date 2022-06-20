@@ -8,6 +8,8 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from .models import UserFollowing
+
 User = get_user_model()
 
 
@@ -53,3 +55,43 @@ class PasswordSerializer(serializers.Serializer):
         except Exception:
             raise AuthenticationError("Invalid Token", 401)
         return super().validate(attrs)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    following = serializers.SerializerMethodField()
+    followers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "following", "followers"]
+
+    def get_following(self, obj: Any) -> Any:
+        return FollowingSerializer(obj.following.all(), many=True).data
+
+    def get_followers(self, obj: Any) -> Any:
+        return FollowersSerializer(obj.followers.all(), many=True).data
+
+
+class UserFollowingSerializer(serializers.ModelSerializer):
+    following = serializers.ReadOnlyField(source="following_user_id.username")
+    follower = serializers.ReadOnlyField(source="user_id.username")
+
+    class Meta:
+        model = UserFollowing
+        fields = ["id", "created_at", "following", "follower"]
+
+
+class FollowingSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source="following_user_id.username")
+
+    class Meta:
+        model = UserFollowing
+        fields = ["following_user_id", "username", "created_at"]
+
+
+class FollowersSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source="user_id.username")
+
+    class Meta:
+        model = UserFollowing
+        fields = ["user_id", "username", "created_at"]

@@ -3,6 +3,7 @@ from typing import Any
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
+from django.http import Http404
 from django.urls import reverse
 from django.utils.encoding import (
     DjangoUnicodeDecodeError,
@@ -10,14 +11,18 @@ from django.utils.encoding import (
     smart_str,
 )
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .serializers import (
     PasswordResetSerializer,
     PasswordSerializer,
+    UserFollowing,
+    UserFollowingSerializer,
+    UserSerializer,
     UserTokenObtainPairSerializer,
 )
 from .utils import Util
@@ -105,3 +110,40 @@ class PasswordResetAPIView(generics.GenericAPIView):
         return Response(
             {"Password changed Successfully"}, status=status.HTTP_200_OK
         )
+
+
+class UserFollowingViewSet(viewsets.ModelViewSet):
+    queryset = UserFollowing.objects.all()
+    serializer_class = UserFollowingSerializer
+
+
+class UserFollow(APIView):
+    def get_object(self, pk: Any) -> Any:
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise Http404
+
+    def get(self, request: Any, pk: Any, format: Any = None) -> Any:
+        user = self.get_object(pk)
+        print(user)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    def post(self, request: Any, pk: Any, format: Any = None) -> Any:
+        user = request.user
+        follow = self.get_object(pk)
+        UserFollowing.objects.create(user_id=user, following_user_id=follow)
+        serializer = UserSerializer(follow)
+        return Response(serializer.data)
+
+    def delete(self, request: Any, pk: Any, format: Any = None) -> Any:
+        user = request.user
+        follow = self.get_object(pk)
+        connection = UserFollowing.objects.filter(
+            user_id=user, following_user_id=follow
+        ).first()
+        if connection:
+            connection.delete()
+        serializer = UserSerializer(follow)
+        return Response(serializer.data)

@@ -62,3 +62,32 @@ class Profile(TimeStampedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(max_length=500, blank=True)
     image = models.ImageField(upload_to="profile_pics", blank=True)
+
+
+class UserFollowing(TimeStampedModel):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user_id", "following_user_id"],
+                name="unique_following",
+            )
+        ]
+        ordering = ["-created_at"]
+
+    user_id = models.ForeignKey(
+        "User",
+        related_name="following",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    following_user_id = models.ForeignKey(
+        "User",
+        related_name="followers",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self) -> str:
+        return f"{self.user_id} is following {self.following_user_id}"

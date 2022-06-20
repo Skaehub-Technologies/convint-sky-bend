@@ -1,32 +1,42 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
     PasswordResetAPIView,
     PasswordResetEmail,
+    UserFollow,
+    UserFollowingViewSet,
     UserTokenObtainPairView,
+)
+
+router = DefaultRouter()
+router.register(
+    r"userfollowing", UserFollowingViewSet, basename="userfollowing"
 )
 
 urlpatterns = [
     path(
-        "login/",
+        "auth/login/",
         UserTokenObtainPairView.as_view(),
         name="login",
     ),
-    path("refresh/", TokenRefreshView.as_view(), name="refresh"),
+    path("auth/refresh/", TokenRefreshView.as_view(), name="refresh"),
     path(
-        "reset-password-request/",
+        "auth/reset-password-request/",
         PasswordResetEmail.as_view(),
         name="reset-password-request",
     ),
     path(
-        "reset-password/<uidb64>/<token>",
+        "auth/reset-password/<uidb64>/<token>",
         PasswordResetAPIView.as_view(),
         name="reset-password-verify",
     ),
     path(
-        "reset-password/",
+        "auth/reset-password/",
         PasswordResetAPIView.as_view(),
         name="reset-password",
     ),
+    path("", include(router.urls)),
+    path("users/follow/<int:pk>/", UserFollow.as_view(), name="user-follow"),
 ]
