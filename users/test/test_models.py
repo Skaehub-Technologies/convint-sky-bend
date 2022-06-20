@@ -67,13 +67,4 @@ class UserModelTest(TestCase):
         password=fake.password(),
         is_superuser=True,)
         self.assertTrue = (user.is_superuser)
-
-
-class TestUser(TestCase):
-    def test_user(self):
-        self.user = User.objects.create(username= 'me', email = 'me@test.com', password= '12345')
-        self.user_check = User.objects.filter(email__iexact='me@test.com')
-        self.user_exist = self.user_check.exists()
-        self.assertEqual(self.user_exist,1)
-        self.assertIsInstance(self.user.email, str)
       

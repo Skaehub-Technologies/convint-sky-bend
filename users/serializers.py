@@ -16,26 +16,7 @@ class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
         token["editor"] = user.is_editor
         return token
 
-
-# class UserProfile(serializers.Serializer):
-#     class Meta:
-#         model = Profile
-#         fields = '__all__'
-#         extra_kwargs = {'password' : {'write_only' : True}}
-
-#     def create(self, validated_data):
-#         user = User.objects.create(
-#             email = validated_data['email'],
-#             username = validated_data['username'],
-#             bio = validated_data['bio'],
-#             image = validated_data['image']
-#         )
-#         user.set_password(validated_data['password'])
-#         user.save()
-
-#         return user
 class ProfileSerializer(serializers.ModelSerializer):
-    user = serializers.CharField(source=User)
     bio = serializers.CharField(allow_blank= True, required=False)
     image = serializers.SerializerMethodField()
     class Meta:
@@ -49,7 +30,3 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         return 'https://image.shutterstock.com/image-vector/default-avatar-profile-icon-social-260nw-1677509740.jpg'
             
-    
-      
-
-
