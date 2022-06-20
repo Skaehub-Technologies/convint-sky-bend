@@ -29,4 +29,4 @@ class ProfileSerializer(serializers.ModelSerializer):
             return obj.image
 
         return 'https://image.shutterstock.com/image-vector/default-avatar-profile-icon-social-260nw-1677509740.jpg'
-            
+    
