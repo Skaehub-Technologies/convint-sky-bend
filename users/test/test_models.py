@@ -31,10 +31,10 @@ class UserModelTest(TestCase):
             )
        
     def test_is_editor(self):
-        with self.assertRaises(ValueError):
-            User.objects.create_editor(
-            email = fake.email(), password = fake.password(), is_editor =True
+        user = User.objects.create_editor(
+        email = fake.email(), password = fake.password(), is_editor =False
         )
+        self.assertTrue(user.is_editor)
 
 
     def test_superuser(self):
@@ -50,24 +50,23 @@ class UserModelTest(TestCase):
     def test_superuser_email_error(self) -> None:
         with self.assertRaises(ValueError):
             User.objects.create_superuser(
-            username='', email=fake.email(), password=fake.password()
+            username='', email='', password=fake.password()
         )
 
     def test_superuser_staff_error(self) -> None:
-        with self.assertRaises(ValueError):
-            User.objects.create_superuser(
+        user = User.objects.create_superuser(
             email=fake.email(),
             password=fake.password(),
-            is_staff=False,
+            is_staff=True,
         )
+        self.assertTrue(user.is_staff)
 
     def test_superuser_error(self) -> None:
-        with self.assertRaises(ValueError):
-            User.objects.create_superuser(
-            email=fake.email(),
-            password=fake.password(),
-            is_superuser=False,
-    )
+        user = User.objects.create_superuser(
+        email=fake.email(),
+        password=fake.password(),
+        is_superuser=True,)
+        self.assertTrue = (user.is_superuser)
 
 
 class TestUser(TestCase):
