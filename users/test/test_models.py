@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.test import Client
 from faker import Faker
 
 fake = Faker()
@@ -66,9 +67,10 @@ class UserModelTest(TestCase):
         password=fake.password(),
         is_superuser=True,)
         self.assertTrue = (user.is_superuser)
-        
+
     def test_user_representation_is_email(self) -> None:
         user = User.objects.create_user(
             email=fake.email(), password=fake.password()
         )
-        self.assertEqual(str(user), user.email)  
+        self.assertEqual(str(user), user.email) 
+      
