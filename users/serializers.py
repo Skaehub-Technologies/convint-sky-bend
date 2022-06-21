@@ -3,7 +3,6 @@ from typing import Any
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
-
 class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
     @classmethod
     def get_token(cls: Any, user: Any) -> Any:
