@@ -1,10 +1,8 @@
 import os
-import django_heroku
-
 from datetime import timedelta
 from pathlib import Path
 from typing import List
-
+import django_heroku
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -81,6 +79,7 @@ DATABASES = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
