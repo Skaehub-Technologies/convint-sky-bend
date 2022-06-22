@@ -39,7 +39,6 @@ workflows:
               only: main
   upload-to-codecov:
     jobs:
-      steps:
-        - checkout
-        - codecov/upload:
-            token: $TOKEN
+      - checkout
+      - codecov/upload:
+          token: $TOKEN
