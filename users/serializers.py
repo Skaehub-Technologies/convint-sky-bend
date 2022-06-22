@@ -9,6 +9,10 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
+<<<<<<< HEAD
+=======
+
+>>>>>>> ec4625a (ft(reset-password-via-email): enable users to reset passwords via email)
 
 class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
     @classmethod

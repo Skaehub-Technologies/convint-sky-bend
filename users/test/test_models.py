@@ -6,6 +6,7 @@ fake = Faker()
 User = get_user_model()
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 class TestUserModel(TestCase):
     def test_create_user(self) -> None:
@@ -52,6 +53,8 @@ class TestUserModel(TestCase):
         )
         self.assertEqual(str(user), user.email)
 =======
+=======
+>>>>>>> ec4625a (ft(reset-password-via-email): enable users to reset passwords via email)
 
 class UserModelTest(TestCase):
     def test_create_user(self) -> None:
@@ -122,4 +125,7 @@ class TestUser(TestCase):
         self.user_exist = self.user_check.exists()
         self.assertEqual(self.user_exist, 1)
         self.assertIsInstance(self.user.email, str)
+<<<<<<< HEAD
+>>>>>>> ec4625a (ft(reset-password-via-email): enable users to reset passwords via email)
+=======
 >>>>>>> ec4625a (ft(reset-password-via-email): enable users to reset passwords via email)
