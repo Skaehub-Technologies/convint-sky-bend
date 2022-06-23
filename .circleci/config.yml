@@ -4,10 +4,22 @@ orbs:
   heroku: circleci/heroku@1.2.6
   codecov: codecov/codecov@3.2.3
   pre-commit: skoblenick/pre-commit@0.2.0
-
+executors:
+  convint-executor: 
+    docker:    
+      - image: cimg/python:3.10    
+        environment:    
+          SECRET_KEY: circlecisecretkey   
+          DATABASE_URL: postgresql://circle:password@localhost/circle_test?sslmode=disable    
+          ENV_NAME: local   
+      - image: circleci/postgres:latest    
+        environment:    
+          POSTGRES_USER: circle   
+          POSTGRES_PASSWORD: password              
+          POSTGRES_DB: circle_test
 jobs:
   build_and_test:
-    executor: python/default
+    executor: convint-executor
     steps:
       - checkout
       - python/install-packages:
