@@ -46,8 +46,4 @@ workflows:
           requires:
             - pre-commit
           post-steps:
-            - upload-to-codecov
-  upload-to-codecov:
-    jobs:
-      - checkout
-      - codecov/upload
+            - codecov/upload
