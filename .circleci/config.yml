@@ -1,0 +1,50 @@
+version: 2.1
+orbs:
+  python: circleci/python@2.0.3
+  codecov: codecov/codecov@3.2.3
+  pre-commit: skoblenick/pre-commit@0.2.0
+
+executors:
+  convint-executor:
+    docker:
+      - image: cimg/python:3.10
+        environment:
+          SECRET_KEY: circlecisecretkey
+          DATABASE_URL: postgresql://circle:password@localhost/circle_test?sslmode=disable
+          ENV_NAME: local
+      - image: circleci/postgres:latest
+        environment:
+          POSTGRES_USER: circle
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: circle_test
+jobs:
+  build_and_test:
+    executor: convint-executor
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run:
+          name: Run tests
+          command: python -m pytest
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .
+  pre-commit:
+    executor: python/default
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run: pre-commit run --all-files
+
+workflows:
+  test_my_app:
+    jobs:
+      - pre-commit
+      - build_and_test:
+          requires:
+            - pre-commit
+          post-steps:
+            - codecov/upload
