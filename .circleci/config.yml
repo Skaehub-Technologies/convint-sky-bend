@@ -42,6 +42,7 @@ jobs:
 workflows:
   test_my_app:
     jobs:
+      - pre-commit
       - build_and_test:
           requires:
             - pre-commit
