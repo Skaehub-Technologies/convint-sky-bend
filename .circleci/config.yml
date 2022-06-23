@@ -22,6 +22,7 @@ jobs:
   pre-commit:
     executor: python/default
     steps:
+      - checkout
       - python/install-packages:
           pkg-manager: pip
       - run: pre-commit run --all-files
