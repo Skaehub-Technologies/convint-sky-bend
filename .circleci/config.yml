@@ -33,6 +33,8 @@ jobs:
           force: true
 
   upload-to-codecov:
+    docker:
+      -
     steps:
       - codecov/upload:
           token: $TOKEN
