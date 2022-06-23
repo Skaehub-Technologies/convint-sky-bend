@@ -22,7 +22,8 @@ jobs:
   pre-commit:
     executor: pre-commit
     steps:
-      - run: pre-commit run --all-files
+      - run: 
+          command: pre-commit run --all-files
 
   deploy:
     executor: python/default
