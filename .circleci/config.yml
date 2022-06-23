@@ -32,13 +32,6 @@ jobs:
       - heroku/deploy-via-git:
           force: true
 
-  upload-to-codecov:
-    docker:
-      -
-    steps:
-      - codecov/upload:
-          token: $TOKEN
-          upload_name: convint-bend-coverage-report
 workflows:
   test_my_app:
     jobs:
