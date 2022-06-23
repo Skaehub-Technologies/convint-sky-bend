@@ -3,7 +3,7 @@ orbs:
   python: circleci/python@2.0.3
   heroku: circleci/heroku@1.2.6
   codecov: codecov/codecov@3.2.3
-  # pre-commit: skoblenick/pre-commit@0.2.0
+  pre-commit: skoblenick/pre-commit@0.2.0
 
 jobs:
   build_and_test:
@@ -20,6 +20,7 @@ jobs:
           paths:
             - .
   pre-commit:
+    executor: pre-commit
     steps:
       - run: pre-commit run --all-files
 
