@@ -22,8 +22,7 @@ jobs:
   pre-commit:
     executor: pre-commit
     steps:
-      - run: 
-          command: pre-commit run --all-files
+      - run: pre-commit run --all-files
 
   deploy:
     executor: python/default
@@ -43,7 +42,6 @@ workflows:
     jobs:
       - pre-commit
       - build_and_test
-      - upload-to-codecov
       - deploy:
           requires:
             - build_and_test
