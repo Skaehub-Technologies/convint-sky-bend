@@ -3,6 +3,7 @@ orbs:
   python: circleci/python@2.0.3
   heroku: circleci/heroku@1.2.6
   codecov: codecov/codecov@3.2.3
+  pre-commit: skoblenick/pre-commit@0.2.0
 
 jobs:
   build_and_test:
@@ -18,6 +19,9 @@ jobs:
           root: ~/project
           paths:
             - .
+  pre-commit:
+    steps:
+      - run: pre-commit run --all-files
 
   deploy:
     executor: python/default
@@ -27,17 +31,20 @@ jobs:
       - heroku/deploy-via-git:
           force: true
 
+  upload-to-codecov:
+    steps:
+      - codecov/upload:
+          token: $TOKEN
+          upload_name: convint-bend-coverage-report
 workflows:
   test_my_app:
     jobs:
+      - pre-commit
       - build_and_test
+      - upload-to-codecov
       - deploy:
           requires:
             - build_and_test
           filters:
             branches:
               only: main
-  upload-to-codecov:
-    jobs:
-      - codecov/upload:
-          token: $TOKEN
