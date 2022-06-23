@@ -20,7 +20,7 @@ jobs:
           paths:
             - .
   pre-commit:
-    executor: pre-commit
+    executor: python/default
     steps:
       - run: pre-commit run --all-files
 
