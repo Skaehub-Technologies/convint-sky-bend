@@ -68,20 +68,20 @@ class UserFollowing(TimeStampedModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user_id", "following_user_id"],
+                fields=["follower", "followed"],
                 name="unique_following",
             )
         ]
         ordering = ["-created_at"]
 
-    user_id = models.ForeignKey(
+    follower = models.ForeignKey(
         "User",
-        related_name="following",
+        related_name="followed",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
-    following_user_id = models.ForeignKey(
+    followed = models.ForeignKey(
         "User",
         related_name="followers",
         on_delete=models.SET_NULL,
@@ -90,4 +90,4 @@ class UserFollowing(TimeStampedModel):
     )
 
     def __str__(self) -> str:
-        return f"{self.user_id} is following {self.following_user_id}"
+        return f"{self.follower} is followed {self.followed}"

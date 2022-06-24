@@ -18,32 +18,32 @@ class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
         return token
 
 
-class UserSerializer(serializers.ModelSerializer):
-    following = serializers.SerializerMethodField()
+class UserFollowingSerializer(serializers.ModelSerializer):
+    followed = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "following", "followers"]
+        fields = ["id", "username", "followed", "followers"]
 
-    def get_following(self, obj: Any) -> Any:
-        return FollowingSerializer(obj.following.all(), many=True).data
+    def get_followed(self, obj: Any) -> Any:
+        return FollowedSerializer(obj.followed.all(), many=True).data
 
     def get_followers(self, obj: Any) -> Any:
         return FollowersSerializer(obj.followers.all(), many=True).data
 
 
-class FollowingSerializer(serializers.ModelSerializer):
-    username = serializers.ReadOnlyField(source="following_user_id.username")
+class FollowedSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source="followed.username")
 
     class Meta:
         model = UserFollowing
-        fields = ["following_user_id", "username", "created_at"]
+        fields = ["followed", "username", "created_at"]
 
 
 class FollowersSerializer(serializers.ModelSerializer):
-    username = serializers.ReadOnlyField(source="user_id.username")
+    username = serializers.ReadOnlyField(source="follower.username")
 
     class Meta:
         model = UserFollowing
-        fields = ["user_id", "username", "created_at"]
+        fields = ["follower", "username", "created_at"]

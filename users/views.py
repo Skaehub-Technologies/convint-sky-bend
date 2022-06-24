@@ -8,7 +8,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .serializers import (
     UserFollowing,
-    UserSerializer,
+    UserFollowingSerializer,
     UserTokenObtainPairSerializer,
 )
 
@@ -19,7 +19,7 @@ class UserTokenObtainPairView(TokenObtainPairView):  # type: ignore
     serializer_class = UserTokenObtainPairSerializer
 
 
-class UserFollow(APIView):
+class UserFollowView(APIView):
     def get_object(self, pk: Any) -> Any:
         try:
             return User.objects.get(pk=pk)
@@ -28,24 +28,23 @@ class UserFollow(APIView):
 
     def get(self, request: Any, pk: Any, format: Any = None) -> Any:
         user = self.get_object(pk)
-        print(user)
-        serializer = UserSerializer(user)
+        serializer = UserFollowingSerializer(user)
         return Response(serializer.data)
 
     def post(self, request: Any, pk: Any, format: Any = None) -> Any:
         user = request.user
         follow = self.get_object(pk)
-        UserFollowing.objects.create(user_id=user, following_user_id=follow)
-        serializer = UserSerializer(follow)
+        UserFollowing.objects.create(follower=user, followed=follow)
+        serializer = UserFollowingSerializer(follow)
         return Response(serializer.data)
 
     def delete(self, request: Any, pk: Any, format: Any = None) -> Any:
         user = request.user
         follow = self.get_object(pk)
         connection = UserFollowing.objects.filter(
-            user_id=user, following_user_id=follow
+            follower=user, followed=follow
         ).first()
         if connection:
             connection.delete()
-        serializer = UserSerializer(follow)
+        serializer = UserFollowingSerializer(follow)
         return Response(serializer.data)

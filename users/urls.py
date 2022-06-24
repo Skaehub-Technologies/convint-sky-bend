@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import UserFollow, UserTokenObtainPairView
+from .views import UserFollowView, UserTokenObtainPairView
 
 urlpatterns = [
     path(
@@ -10,5 +10,7 @@ urlpatterns = [
         name="login",
     ),
     path("auth/refresh/", TokenRefreshView.as_view(), name="refresh"),
-    path("users/follow/<int:pk>/", UserFollow.as_view(), name="user-follow"),
+    path(
+        "users/follow/<int:pk>/", UserFollowView.as_view(), name="user-follow"
+    ),
 ]
