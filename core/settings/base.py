@@ -108,12 +108,13 @@ AUTH_USER_MODEL = "users.User"
 
 # rest auth
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
+    # "DEFAULT_PERMISSION_CLASSES": (
+    #   "rest_framework.permissions.IsAuthenticated",
+    # ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
 
 # jwt settings
@@ -124,3 +125,13 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": False,
 }
+
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# sendgrid settings
+EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_HOST_USER = "apikey"
+EMAIL_HOST_PASSWORD = os.getenv("SENDGRID_API_KEY")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USER = os.getenv("EMAIL_USER")
