@@ -26,7 +26,7 @@ jobs:
           pkg-manager: pip
       - run:
           name: Run tests
-          command: python -m pytest
+          command: python -m pytest --cov-report xml:coverage.xml
       - persist_to_workspace:
           root: ~/project
           paths:
