@@ -6,6 +6,10 @@ from typing import List
 import dj_database_url
 from dotenv import load_dotenv
 
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -132,3 +136,15 @@ SWAGGER_SETTINGS = {
         "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
     }
 }
+
+cloudinary.config( 
+  cloud_name = "dxalubbwh", 
+  api_key = "457522561416653", 
+  api_secret = "XwAsCiQDmxRNtVmnK8hGaLyegBY",
+)
+
+DEFAULT_PARSER_CLASSES = (
+    'rest_framework.parsers.JSONParser',
+    'rest_framework.parsers.FormParser',
+    'rest_framework.parsers.MultiPartParser',
+)
