@@ -5,52 +5,49 @@ from faker import Faker
 fake = Faker()
 User = get_user_model()
 
+
 class UserModelTest(TestCase):
-    def test_create_user(self):
+    def test_create_user(self) -> None:
         user = User.objects.create_user(
             email=fake.email(), password=fake.password()
         )
         self.assertNotEqual(user.email, fake.email())
-        
-    
-    def test_password_exception_raised(self):
-           with self.assertRaises(ValueError):
+
+    def test_password_exception_raised(self) -> None:
+        with self.assertRaises(ValueError):
             User.objects.create_user(
-                username=fake.name(),
-                email = fake.email(),
-                password = ''
+                username=fake.name(), email=fake.email(), password=""
             )
 
-    def test_Email_exception_raised(self):
-           with self.assertRaises(ValueError):
+    def test_Email_exception_raised(self) -> None:
+        with self.assertRaises(ValueError):
             User.objects.create_user(
-                username=fake.name(),
-                email = '',
-                password = fake.password()
+                username=fake.name(), email="", password=fake.password()
             )
-       
-    def test_is_editor(self):
+
+    def test_is_editor(self) -> None:
         user = User.objects.create_editor(
-        email = fake.email(), password = fake.password(), is_editor =False
+            email=fake.email(), password=fake.password(), is_editor=False
         )
         self.assertTrue(user.is_editor)
 
-
-    def test_superuser(self):
-        super_user = User.objects.create_superuser(email= fake.email(), password=fake.password())
+    def test_superuser(self) -> None:
+        super_user = User.objects.create_superuser(
+            email=fake.email(), password=fake.password()
+        )
         self.assertNotEqual(super_user.email, fake.email())
 
     def test_superuser_password_error(self) -> None:
         with self.assertRaises(ValueError):
             User.objects.create_superuser(
-            username=fake.name(), email=fake.email(), password=""
-        )
+                username=fake.name(), email=fake.email(), password=""
+            )
 
     def test_superuser_email_error(self) -> None:
         with self.assertRaises(ValueError):
             User.objects.create_superuser(
-            username='', email='', password=fake.password()
-        )
+                username="", email="", password=fake.password()
+            )
 
     def test_superuser_staff_error(self) -> None:
         user = User.objects.create_superuser(
@@ -62,13 +59,14 @@ class UserModelTest(TestCase):
 
     def test_superuser_error(self) -> None:
         user = User.objects.create_superuser(
-        email=fake.email(),
-        password=fake.password(),
-        is_superuser=True,)
-        self.assertTrue = (user.is_superuser)
-        
+            email=fake.email(),
+            password=fake.password(),
+            is_superuser=True,
+        )
+        self.assertTrue == user.is_superuser
+
     def test_user_representation_is_email(self) -> None:
         user = User.objects.create_user(
             email=fake.email(), password=fake.password()
         )
-        self.assertEqual(str(user), user.email)  
+        self.assertEqual(str(user), user.email)

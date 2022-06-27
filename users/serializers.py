@@ -1,12 +1,13 @@
 from typing import Any
-from .models import  Profile
 
-
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+from .models import Profile
 
 User = get_user_model()
+
 
 class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
     @classmethod
@@ -20,9 +21,9 @@ class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
 class ProfileSerializer(serializers.ModelSerializer):
     bio = serializers.CharField(allow_blank=True, required=False)
     image = serializers.ImageField(
-        max_length=None, use_url=True,
+        use_url=True,
     )
 
     class Meta:
         model = Profile
-        fields = '__all__'
+        fields = "__all__"
