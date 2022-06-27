@@ -18,15 +18,6 @@ class PaswwordResetTest(APITestCase):
         self.casper = User.objects.create(
             username="Casper", email="casper@mail.com", password="password"
         )
-        self.muffin = User.objects.create(
-            username="Muffin", email="Muffin@mail.com", password="password"
-        )
-        self.rambo = User.objects.create(
-            username="Rambo", email="Rambo@mail.com", password="password"
-        )
-        self.ricky = User.objects.create(
-            username="Ricky", email="Ricky@mail.com", password="password"
-        )
 
     def test_password_reset_request(self) -> None:
         url = reverse("reset-password-request")
