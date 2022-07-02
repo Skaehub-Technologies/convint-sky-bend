@@ -2,12 +2,14 @@ from typing import Any
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.contrib.sites.shortcuts import get_current_site
-from django.urls import reverse
-from django.utils.encoding import smart_bytes, smart_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from rest_framework import serializers, status
-from rest_framework.response import Response
+from django.utils.encoding import smart_str
+from django.utils.http import urlsafe_base64_decode
+from rest_framework import serializers
+from rest_framework.exceptions import (
+    AuthenticationFailed,
+    ParseError,
+    PermissionDenied,
+)
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.utils import Util
@@ -34,29 +36,13 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         try:
             request = self.context.get("request")
             email = attrs.get("email")
-            if User.objects.filter(email=email).exists():
-                user = User.objects.get(email=email)
-                uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
-                token = PasswordResetTokenGenerator().make_token(user)
+            user_data = Util.generate_reset_token(email)
 
-                # create email
-                current_site = get_current_site(request).domain
-                relative_link = reverse(
-                    "reset-password",
-                    kwargs={"uidb64": uidb64, "token": token},
-                )
-                absurl = f"http://{current_site}{relative_link}"
-                body = {"user": user, "link": absurl}
-                data = {
-                    "subject": "PASSWORD RESET",
-                    "body": body,
-                    "recipient": user.email,
-                }
-                Util.send_email(data)
+            if user_data:
+                email_data = Util.create_reset_email(request, *user_data)
+                Util.send_email("reset_password.html", email_data)
         except KeyError:
-            return Response(
-                {"error": "KeyError"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            raise ParseError("email must be provided")
         return super().validate(attrs)
 
 
@@ -77,17 +63,11 @@ class PasswordResetSerializer(serializers.Serializer):
             user = User.objects.get(id=user_id)
 
             if not PasswordResetTokenGenerator().check_token(user, token):
-                return Response(
-                    {"message": "request failed"},
-                    status=status.HTTP_401_UNAUTHORIZED,
-                )
+                raise AuthenticationFailed("Invalid token")
 
             user.set_password(password)
             user.save()
 
         except Exception:
-            return Response(
-                {"message": "request failed"},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+            raise PermissionDenied("failed to reset password")
         return super().validate(attrs)

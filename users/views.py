@@ -39,9 +39,13 @@ class PasswordResetAPIView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = PasswordResetSerializer
 
-    def patch(self, request: Any, uidb64: Any, token: Any) -> Any:
+    def patch(self, request: Any, *args: Any, **kwargs: Any) -> Any:
         serializer = self.get_serializer(
-            data={**request.data, "uidb64": uidb64, "token": token}
+            data={
+                **request.data,
+                "uidb64": kwargs.get("uidb64"),
+                "token": kwargs.get("token"),
+            }
         )
         serializer.is_valid(raise_exception=True)
         return Response(
