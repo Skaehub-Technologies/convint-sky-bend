@@ -1,3 +1,4 @@
+import uuid
 from typing import Any
 
 from django.contrib.auth.models import (
@@ -40,6 +41,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     username = models.CharField(max_length=255, unique=True)
+    lookup_id = models.UUIDField(default=uuid.uuid4, editable=False)
     email = models.CharField(
         max_length=255, unique=True, verbose_name="user email"
     )

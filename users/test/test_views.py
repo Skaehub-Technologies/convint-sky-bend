@@ -88,6 +88,34 @@ def test_login(client: Any) -> None:
     assert response.status_code == 200
 
 
+@pytest.mark.django_db
+def test_update_user_by_id(client: Any) -> None:
+    data = {
+        "username": fake.user_name(),
+        "email": fake.email(),
+        "password": fake.password(),
+    }
+
+    url = reverse("register")
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 201
+
+    updated_data = {
+        "email": fake.email,
+    }
+    url = reverse("user-update", kwargs={"pk": data["id"]})
+    response = client.put(
+        url,
+        data=json.dumps(updated_data),
+        content_type="application/json",
+    )
+
+
 class PaswwordResetTest(APITestCase):
     def setUp(self) -> None:
         self.user = User.objects.create(
