@@ -42,6 +42,12 @@ class UserFollowingSerializer(serializers.ModelSerializer):
     def get_followers(self, obj: Any) -> Any:
         return FollowersSerializer(obj.followers.all(), many=True).data
 
+    def create(self, validated_data: Any) -> Any:
+        import pdb
+
+        pdb.set_trace()
+        return super().create(validated_data)
+
 
 class FollowedSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source="followed.username")

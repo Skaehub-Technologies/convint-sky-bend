@@ -103,8 +103,9 @@ class TestFollowingView(APITestCase):
         )
 
 
-# test password reset email view
 class PaswwordResetTest(APITestCase):
+    """test password reset email view"""
+
     def setUp(self) -> None:
         self.user = User.objects.create(
             username=fake.name(), email=fake.email(), password=fake.password()

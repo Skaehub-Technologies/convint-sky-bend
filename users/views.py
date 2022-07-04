@@ -8,10 +8,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from users.models import UserFollowing
+
 from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetSerializer,
-    UserFollowing,
     UserFollowingSerializer,
     UserTokenObtainPairSerializer,
 )
@@ -33,7 +34,7 @@ class UserFollowView(APIView):
     def get(self, request: Any, pk: Any, format: Any = None) -> Any:
         user = self.get_object(pk)
         serializer = UserFollowingSerializer(user)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request: Any, pk: Any, format: Any = None) -> Any:
         user = request.user
@@ -57,7 +58,7 @@ class UserFollowView(APIView):
         follow = self.get_object(pk)
         UserFollowing.objects.create(follower=user, followed=follow)
         serializer = UserFollowingSerializer(follow)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request: Any, pk: Any, format: Any = None) -> Any:
         user = request.user
@@ -68,7 +69,7 @@ class UserFollowView(APIView):
         if connection:
             connection.delete()
         serializer = UserFollowingSerializer(follow)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PasswordResetEmailView(generics.GenericAPIView):
