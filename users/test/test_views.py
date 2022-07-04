@@ -71,14 +71,14 @@ def test_delete_user_admin(client: Any, django_user_model: Any) -> None:
     email = fake.email()
     user = django_user_model.objects.create(password=password, email=email)
     if user.is_superuser:
-        url = reverse("user-detail", kwargs={"pk": user.pk})
+        url = reverse("user-delete", kwargs={"pk": user.pk})
         response = client.delete(url)
         assert response.status_code == 204
 
 
 @pytest.mark.django_db
 def test_delete_user_not_found(client: Any, django_user_model: Any) -> None:
-    url = reverse("user-detail", kwargs={"pk": 1})
+    url = reverse("user-delete", kwargs={"pk": 1})
     response = client.delete(url)
     assert response.status_code == 404
 
@@ -88,7 +88,7 @@ def test_delete_user(client: Any, django_user_model: Any) -> None:
     password = fake.password()
     email = fake.email()
     user = django_user_model.objects.create(password=password, email=email)
-    url = reverse("user-detail", kwargs={"pk": user.pk})
+    url = reverse("user-delete", kwargs={"pk": user.pk})
     response = client.delete(url)
     assert response.status_code == 401
     assert django_user_model.objects.filter(pk=user.pk).count() == 1
@@ -132,6 +132,47 @@ def test_user_register_duplicate_email(client: Any) -> None:
         content_type="application/json",
     )
     assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_update_user(client: Any, django_user_model: Any) -> None:
+    password = fake.password()
+    email = fake.email()
+    user = django_user_model.objects.create(password=password, email=email)
+    test_data = {
+        "username": fake.user_name(),
+        "email": fake.email(),
+        "password": fake.password(),
+    }
+    url = reverse("user-update", kwargs={"pk": user.pk})
+    response = client.put(
+        url,
+        data=json.dumps(test_data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_update_user_fail(client: Any, django_user_model: Any) -> None:
+    password = fake.password()
+    username = fake.user_name()
+    email = fake.email()
+    user = django_user_model.objects.create(
+        password=password, username=username, email=email
+    )
+    test_data = {
+        "username": fake.user_name(),
+        "email": fake.email(),
+        "password": fake.password(),
+    }
+    url = reverse("user-update", kwargs={"pk": user.pk})
+    response = client.put(
+        url,
+        data=json.dumps(test_data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.django_db
@@ -179,34 +220,6 @@ def test_login(client: Any) -> None:
     )
 
     assert response.status_code == 200
-
-
-@pytest.mark.django_db
-def test_update_user_by_id(client: Any) -> None:
-    data = {
-        "username": fake.user_name(),
-        "email": fake.email(),
-        "password": fake.password(),
-    }
-
-    url = reverse("register")
-    response = client.post(
-        url,
-        data=json.dumps(data),
-        content_type="application/json",
-    )
-
-    assert response.status_code == 201
-
-    updated_data = {
-        "email": fake.email(),
-    }
-    url = reverse("user-update", kwargs={"pk": 1})
-    response = client.put(
-        url,
-        data=json.dumps(updated_data),
-        content_type="application/json",
-    )
 
 
 class PaswwordResetTest(APITestCase):
