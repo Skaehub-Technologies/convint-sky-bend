@@ -26,57 +26,50 @@ password_reset_api_view = PasswordResetAPIView.as_view()
 
 class TestFollowingView(APITestCase):
     def setUp(self) -> None:
-        self.casper = User.objects.create(
-            username="Casper", email="casper@mail.com", password="password"
+        self.user_one = User.objects.create(
+            username=fake.name(), email=fake.email(), password=fake.password()
         )
-        self.muffin = User.objects.create(
-            username="Muffin", email="Muffin@mail.com", password="password"
+        self.user_two = User.objects.create(
+            username=fake.name(), email=fake.email(), password=fake.password()
         )
-        self.rambo = User.objects.create(
-            username="Rambo", email="Rambo@mail.com", password="password"
-        )
-        self.ricky = User.objects.create(
-            username="Ricky", email="Ricky@mail.com", password="password"
-        )
+        self.factory = APIRequestFactory()
 
     def test_unauthorized_user_follow(self) -> None:
-        url = reverse("user-follow", kwargs={"pk": self.casper.id})
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
         response = self.client.post(
-            url, kwargs={"pk": self.casper.id}, format="json"
+            url, kwargs={"pk": self.user_one.id}, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_unauthorized_user_unfollow(self) -> None:
-        url = reverse("user-follow", kwargs={"pk": self.casper.id})
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
         response = self.client.delete(
-            url, kwargs={"pk": self.casper.id}, format="json"
+            url, kwargs={"pk": self.user_one.id}, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_authorized_user_follow(self) -> None:
-        factory = APIRequestFactory()
-        url = reverse("user-follow", kwargs={"pk": self.casper.id})
-        request = factory.post(url)
-        force_authenticate(request, user=self.muffin)
-        response = follow_view(request, pk=self.casper.id)
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        request = self.factory.post(url)
+        force_authenticate(request, user=self.user_two)
+        response = follow_view(request, pk=self.user_one.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response.render()
-        self.assertContains(response, text="Muffin")
+        self.assertContains(response, text=self.user_one.username)
 
     def test_authorized_user_unfollow(self) -> None:
-        factory = APIRequestFactory()
-        url = reverse("user-follow", kwargs={"pk": self.casper.id})
-        request = factory.delete(url)
-        force_authenticate(request, user=self.muffin)
-        response = follow_view(request, pk=self.casper.id)
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        request = self.factory.delete(url)
+        force_authenticate(request, user=self.user_two)
+        response = follow_view(request, pk=self.user_one.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_authorized_get_followers(self) -> None:
         factory = APIRequestFactory()
-        url = reverse("user-follow", kwargs={"pk": self.casper.id})
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
         request = factory.get(url)
-        force_authenticate(request, user=self.muffin)
-        response = follow_view(request, pk=self.casper.id)
+        force_authenticate(request, user=self.user_two)
+        response = follow_view(request, pk=self.user_one.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
