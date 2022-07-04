@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
+    "rest_framework.authtoken",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -137,9 +138,9 @@ SWAGGER_SETTINGS = {
 }
 # cloudinary settings
 cloudinary.config(
-    cloud_name="dxalubbwh",
-    api_key="457522561416653",
-    api_secret="XwAsCiQDmxRNtVmnK8hGaLyegBY",
+    cloud_name=os.getenv("cloud_name"),
+    api_key=os.getenv("api_key"),
+    api_secret=os.getenv("api_secret"),
 )
 
 DEFAULT_PARSER_CLASSES = (

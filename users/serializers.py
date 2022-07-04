@@ -19,10 +19,11 @@ class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    bio = serializers.CharField(allow_blank=True, required=False)
-    image = serializers.ImageField(
-        use_url=True,
+    user: Any = serializers.SlugRelatedField(
+        read_only=True, slug_field="username"
     )
+    bio = serializers.CharField(allow_blank=True, required=False)
+    image = serializers.ImageField(use_url=True, required=False)
 
     class Meta:
         model = Profile

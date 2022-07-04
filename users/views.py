@@ -1,6 +1,6 @@
 from typing import Any
 
-from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from rest_framework.generics import UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -13,7 +13,7 @@ class UserTokenObtainPairView(TokenObtainPairView):  # type: ignore
     serializer_class = UserTokenObtainPairSerializer
 
 
-class ProfileView(RetrieveUpdateDestroyAPIView):
+class ProfileView(UpdateAPIView):
 
     permission_classes = (IsAuthenticated,)
     serializer_class = ProfileSerializer
@@ -24,7 +24,7 @@ class ProfileView(RetrieveUpdateDestroyAPIView):
         data = request.data
         profile = Profile.objects.filter(user=current_user.pk)
         if profile:
-            serializer = ProfileSerializer(profile, many=True)
+            serializer = ProfileSerializer(profile)
             return Response(serializer.data)
         else:
             serializer = ProfileSerializer(data=data)
