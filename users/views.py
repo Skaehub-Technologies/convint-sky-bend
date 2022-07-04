@@ -37,6 +37,23 @@ class UserFollowView(APIView):
 
     def post(self, request: Any, pk: Any, format: Any = None) -> Any:
         user = request.user
+
+        # check if user is the same as the one you are trying to follow
+        if user.id == pk:
+            return Response(
+                {"details": "you cannot follow yourself"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # check if user is already following the user you are trying to follow
+        if UserFollowing.objects.filter(
+            follower=user, followed_id=pk
+        ).exists():
+            return Response(
+                {"details": "you are already following this user"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         follow = self.get_object(pk)
         UserFollowing.objects.create(follower=user, followed=follow)
         serializer = UserFollowingSerializer(follow)

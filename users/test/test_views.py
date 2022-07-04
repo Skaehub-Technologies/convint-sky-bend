@@ -72,7 +72,38 @@ class TestFollowingView(APITestCase):
         response = follow_view(request, pk=self.user_one.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_user_cannot_follow_self(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        request = self.factory.post(url)
+        force_authenticate(request, user=self.user_one)
+        response = follow_view(request, pk=self.user_one.id)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response.render()
+        self.assertEqual(
+            response.data, {"details": "you cannot follow yourself"}
+        )
 
+    def test_user_cannot_follow_non_existent_user(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        request = self.factory.post(url)
+        force_authenticate(request, user=self.user_one)
+        response = follow_view(request, pk=self.user_one.id + 100)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_user_cannot_follow_same_user(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_two.id})
+        request = self.factory.post(url)
+        force_authenticate(request, user=self.user_one)
+        response = follow_view(request, pk=self.user_two.id)
+        response_2 = follow_view(request, pk=self.user_two.id)
+        self.assertEqual(response_2.status_code, status.HTTP_400_BAD_REQUEST)
+        response.render()
+        self.assertEqual(
+            response_2.data, {"details": "you are already following this user"}
+        )
+
+
+# test password reset email view
 class PaswwordResetTest(APITestCase):
     def setUp(self) -> None:
         self.user = User.objects.create(
