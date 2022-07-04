@@ -56,6 +56,27 @@ def test_delete_user_not_user(client: Any, django_user_model: Any) -> None:
 
 
 @pytest.mark.django_db
+def test_delete_user_not_admin(client: Any, django_user_model: Any) -> None:
+    password = fake.password()
+    email = fake.email()
+    user = django_user_model.objects.create(password=password, email=email)
+    url = reverse("user-detail", kwargs={"pk": user.pk})
+    response = client.delete(url)
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_delete_user_admin(client: Any, django_user_model: Any) -> None:
+    password = fake.password()
+    email = fake.email()
+    user = django_user_model.objects.create(password=password, email=email)
+    if user.is_superuser:
+        url = reverse("user-detail", kwargs={"pk": user.pk})
+        response = client.delete(url)
+        assert response.status_code == 204
+
+
+@pytest.mark.django_db
 def test_delete_user_not_found(client: Any, django_user_model: Any) -> None:
     url = reverse("user-detail", kwargs={"pk": 1})
     response = client.delete(url)
@@ -87,10 +108,7 @@ def test_user_register(client: Any) -> None:
         data=json.dumps(test_data),
         content_type="application/json",
     )
-    # data = response.json.get("user")
-    assert response.status_code == 201
-    # assert data.get("email") == test_data.get("email")
-    # assert data.get("username") == test_data.get("username")
+    assert response.status_code == status.HTTP_201_CREATED
 
 
 @pytest.mark.django_db
