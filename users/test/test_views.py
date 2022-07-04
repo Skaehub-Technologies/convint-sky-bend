@@ -94,6 +94,46 @@ def test_user_register(client: Any) -> None:
 
 
 @pytest.mark.django_db
+def test_user_register_duplicate_email(client: Any) -> None:
+    test_data = {
+        "username": fake.user_name(),
+        "email": fake.email(),
+        "password": fake.password(),
+    }
+
+    url = reverse("register")
+    response = client.post(
+        url,
+        data=json.dumps(test_data),
+        content_type="application/json",
+    )
+    assert response.status_code == 201
+    response = client.post(
+        url,
+        data=json.dumps(test_data),
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_user_login_fail(client: Any) -> None:
+    test_data = {
+        "username": fake.user_name(),
+        "email": fake.email(),
+        "password": fake.password(),
+    }
+
+    url = reverse("login")
+    response = client.post(
+        url,
+        data=json.dumps(test_data),
+        content_type="application/json",
+    )
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
 def test_login(client: Any) -> None:
     data = {
         "username": fake.user_name(),
@@ -127,7 +167,6 @@ def test_login(client: Any) -> None:
 def test_update_user_by_id(client: Any) -> None:
     data = {
         "username": fake.user_name(),
-        "pk": 1,
         "email": fake.email(),
         "password": fake.password(),
     }
@@ -144,7 +183,7 @@ def test_update_user_by_id(client: Any) -> None:
     updated_data = {
         "email": fake.email(),
     }
-    url = reverse("user-update", kwargs={"pk": data["pk"]})
+    url = reverse("user-update", kwargs={"pk": 1})
     response = client.put(
         url,
         data=json.dumps(updated_data),
