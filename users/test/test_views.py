@@ -92,6 +92,7 @@ def test_login(client: Any) -> None:
 def test_update_user_by_id(client: Any) -> None:
     data = {
         "username": fake.user_name(),
+        "pk": 1,
         "email": fake.email(),
         "password": fake.password(),
     }
@@ -105,15 +106,15 @@ def test_update_user_by_id(client: Any) -> None:
 
     assert response.status_code == 201
 
-    # updated_data = {
-    #     "email": fake.email,
-    # }
-    # url = reverse("user-update", kwargs={"pk": data["id"]})
-    # response = client.put(
-    #     url,
-    #     data=json.dumps(updated_data),
-    #     content_type="application/json",
-    # )
+    updated_data = {
+        "email": fake.email(),
+    }
+    url = reverse("user-update", kwargs={"pk": data["pk"]})
+    response = client.put(
+        url,
+        data=json.dumps(updated_data),
+        content_type="application/json",
+    )
 
 
 class PaswwordResetTest(APITestCase):
