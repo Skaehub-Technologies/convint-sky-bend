@@ -1,0 +1,9 @@
+codecov:
+  branch: main
+coverage:
+  status:
+    patch: false
+    project:
+      default:
+        target: "100"
+        threshold: "0.1"
