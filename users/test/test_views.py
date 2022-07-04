@@ -39,6 +39,41 @@ def test_user_detail(client: Any, django_user_model: Any) -> None:
 
 
 @pytest.mark.django_db
+def test_user_detail_not_found(client: Any, django_user_model: Any) -> None:
+    url = reverse("user-detail", kwargs={"pk": 1})
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_delete_user_not_user(client: Any, django_user_model: Any) -> None:
+    password = fake.password()
+    email = fake.email()
+    user = django_user_model.objects.create(password=password, email=email)
+    url = reverse("user-detail", kwargs={"pk": user.pk})
+    response = client.delete(url)
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_delete_user_not_found(client: Any, django_user_model: Any) -> None:
+    url = reverse("user-detail", kwargs={"pk": 1})
+    response = client.delete(url)
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_delete_user(client: Any, django_user_model: Any) -> None:
+    password = fake.password()
+    email = fake.email()
+    user = django_user_model.objects.create(password=password, email=email)
+    url = reverse("user-detail", kwargs={"pk": user.pk})
+    response = client.delete(url)
+    assert response.status_code == 401
+    assert django_user_model.objects.filter(pk=user.pk).count() == 1
+
+
+@pytest.mark.django_db
 def test_user_register(client: Any) -> None:
     test_data = {
         "username": fake.user_name(),
