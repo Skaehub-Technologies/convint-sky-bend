@@ -19,6 +19,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from core.settings.base import EMAIL_USER
 from users.utils import Util
 
+from .models import Profile
 from .validators import (
     validate_password_digit,
     validate_password_lowercase,
@@ -88,6 +89,7 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data: Any) -> Any:
         user = User.objects.create_user(**validated_data)
         user.save()
+        Profile.objects.create(user=user)
         self.send_email(user, self.context.get("request"))
         return user
 
