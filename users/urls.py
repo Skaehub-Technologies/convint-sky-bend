@@ -18,9 +18,7 @@ urlpatterns = [
     path("refresh/", TokenRefreshView.as_view(), name="refresh"),
     path("register/", UserList.as_view(), name="register"),
     path("users/", UserList.as_view(), name="users"),
-    path("user/<int:pk>/", UserDetail.as_view(), name="user-detail"),
-    path("user/<int:pk>/update/", UserDetail.as_view(), name="user-update"),
-    path("user/<int:pk>/delete/", UserDetail.as_view(), name="user-delete"),
+    path("user/<str:lookup_id>/", UserDetail.as_view(), name="user-detail"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="refresh"),
     path(
         "auth/reset-password-request/",

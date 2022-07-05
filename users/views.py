@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from .permissions import IsOwnerOrReadOnly
 from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetSerializer,
@@ -17,28 +18,16 @@ User = get_user_model()
 
 
 class UserList(generics.ListCreateAPIView):
+    permission_classes = (IsOwnerOrReadOnly,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
 
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsOwnerOrReadOnly,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    """allow only users to  delete own account"""
-
-    def delete(self, request: Any, *args: Any, **kwargs: Any) -> Any:
-        user = self.get_object()
-        if user == request.user:
-            self.perform_destroy(user)
-            return Response(
-                {"message": "User deleted Successfully"},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                {"message": "You can only delete your own account"},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+    lookup_field: str = "lookup_id"
 
 
 class UserTokenObtainPairView(TokenObtainPairView):  # type: ignore
