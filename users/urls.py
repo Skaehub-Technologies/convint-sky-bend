@@ -7,6 +7,7 @@ from .views import (
     UserDetail,
     UserList,
     UserTokenObtainPairView,
+    VerifyEmail,
 )
 
 urlpatterns = [
@@ -16,7 +17,6 @@ urlpatterns = [
         name="login",
     ),
     path("refresh/", TokenRefreshView.as_view(), name="refresh"),
-    path("register/", UserList.as_view(), name="register"),
     path("users/", UserList.as_view(), name="users"),
     path("user/<str:lookup_id>/", UserDetail.as_view(), name="user-detail"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="refresh"),
@@ -29,5 +29,10 @@ urlpatterns = [
         "auth/reset-password-verify/<uidb64>/<token>",
         PasswordResetAPIView.as_view(),
         name="reset-password",
+    ),
+    path(
+        "auth/verify-email/<str:uidb64>/<str:token>/",
+        VerifyEmail.as_view(),
+        name="verify-email",
     ),
 ]
