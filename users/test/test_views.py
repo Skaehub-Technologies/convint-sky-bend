@@ -4,6 +4,7 @@ from django.utils.encoding import smart_bytes
 from django.utils.http import urlsafe_base64_encode
 from faker import Faker
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.reverse import reverse
 from rest_framework.test import (
     APIRequestFactory,
@@ -77,11 +78,9 @@ class TestFollowingView(APITestCase):
         request = self.factory.post(url)
         force_authenticate(request, user=self.user_one)
         response = follow_view(request, pk=self.user_one.id)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         response.render()
-        self.assertEqual(
-            response.data, {"details": "you cannot follow yourself"}
-        )
+        self.assertRaisesMessage(PermissionDenied, "failed to reset password")
 
     def test_user_cannot_follow_non_existent_user(self) -> None:
         url = reverse("user-follow", kwargs={"pk": self.user_one.id})
@@ -96,11 +95,18 @@ class TestFollowingView(APITestCase):
         force_authenticate(request, user=self.user_one)
         response = follow_view(request, pk=self.user_two.id)
         response_2 = follow_view(request, pk=self.user_two.id)
-        self.assertEqual(response_2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response_2.status_code, status.HTTP_403_FORBIDDEN)
         response.render()
-        self.assertEqual(
-            response_2.data, {"details": "you are already following this user"}
+        self.assertRaisesMessage(
+            PermissionDenied, "you are already following this user"
         )
+
+    def test_user_unfollow(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        request = self.factory.delete(url)
+        force_authenticate(request, user=self.user_two)
+        response = follow_view(request, pk=self.user_one.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class PaswwordResetTest(APITestCase):

@@ -28,6 +28,23 @@ class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
         return token
 
 
+class CreateFollowingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserFollowing
+        fields = ("id", "follower", "followed")
+
+    def validate(self, attrs: Any) -> Any:
+        follower = attrs.get("follower")
+        followed = attrs.get("followed")
+        if follower == followed:
+            raise PermissionDenied("you cannot follow yourself")
+        if UserFollowing.objects.filter(
+            follower=follower, followed=followed
+        ).exists():
+            raise PermissionDenied("you are already following this user")
+        return super().validate(attrs)
+
+
 class UserFollowingSerializer(serializers.ModelSerializer):
     followed = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
@@ -41,12 +58,6 @@ class UserFollowingSerializer(serializers.ModelSerializer):
 
     def get_followers(self, obj: Any) -> Any:
         return FollowersSerializer(obj.followers.all(), many=True).data
-
-    def create(self, validated_data: Any) -> Any:
-        import pdb
-
-        pdb.set_trace()
-        return super().create(validated_data)
 
 
 class FollowedSerializer(serializers.ModelSerializer):
