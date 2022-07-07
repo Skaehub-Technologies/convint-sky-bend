@@ -76,7 +76,7 @@ class UserFollowing(TimeStampedModel):
 
     follower = models.ForeignKey(
         "User",
-        related_name="followed",
+        related_name="following",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
