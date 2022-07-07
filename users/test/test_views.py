@@ -34,7 +34,6 @@ class TestFollowingView(APITestCase):
             username=fake.name(), email=fake.email(), password=self.password
         )
         self.client = APIClient()
-        self.factory = APIRequestFactory()
 
     @property
     def bearer_token(self) -> Any:

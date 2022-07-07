@@ -90,4 +90,4 @@ class UserFollowing(TimeStampedModel):
     )
 
     def __str__(self) -> str:
-        return f"{self.follower} is followed {self.followed}"
+        return f"{self.follower} is following {self.followed}"

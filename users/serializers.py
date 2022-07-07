@@ -46,15 +46,15 @@ class CreateFollowingSerializer(serializers.ModelSerializer):
 
 
 class UserFollowingSerializer(serializers.ModelSerializer):
-    followed = serializers.SerializerMethodField()
+    following = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "followed", "followers"]
+        fields = ["id", "username", "following", "followers"]
 
-    def get_followed(self, obj: Any) -> Any:
-        return FollowedSerializer(obj.followed.all(), many=True).data
+    def get_following(self, obj: Any) -> Any:
+        return FollowedSerializer(obj.following.all(), many=True).data
 
     def get_followers(self, obj: Any) -> Any:
         return FollowersSerializer(obj.followers.all(), many=True).data
