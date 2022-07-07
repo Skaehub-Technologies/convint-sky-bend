@@ -43,11 +43,10 @@ class UserFollowView(APIView):
         serializer = CreateFollowingSerializer(
             data={"follower": user.id, "followed": follow.id}
         )
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            serializer_two = UserFollowingSerializer(follow)
-            return Response(serializer_two.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer_two = UserFollowingSerializer(follow)
+        return Response(serializer_two.data, status=status.HTTP_200_OK)
 
     def delete(self, request: Any, pk: Any, format: Any = None) -> Any:
         user = request.user
