@@ -11,15 +11,10 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from users.views import (
-    PasswordResetAPIView,
-    PasswordResetEmailView,
-    UserFollowView,
-)
+from users.views import PasswordResetAPIView, PasswordResetEmailView
 
 fake = Faker()
 User = get_user_model()
-follow_view = UserFollowView.as_view()
 password_reset_email_view = PasswordResetEmailView.as_view()
 password_reset_api_view = PasswordResetAPIView.as_view()
 
