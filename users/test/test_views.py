@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_bytes
@@ -7,31 +9,35 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIRequestFactory, APITestCase
 
-from users.views import (
-    PasswordResetAPIView,
-    PasswordResetEmailView,
-    UserDetail,
-    UserList,
-)
+from users.views import PasswordResetAPIView, PasswordResetEmailView
+
+from .mocks import test_user, test_user_2
 
 fake = Faker()
 User = get_user_model()
 
 password_reset_email_view = PasswordResetEmailView.as_view()
 password_reset_api_view = PasswordResetAPIView.as_view()
-user_detail = UserDetail.as_view()
-user_list = UserList.as_view()
-fake = Faker()
 
 
 class TestUserList(APITestCase):
-    def setUp(self) -> None:
-        self.user = User.objects.create_user(
-            username=fake.user_name(),
-            email=fake.email(),
-            password=fake.password(),
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create_user(**test_user)  # type: ignore[attr-defined]
+
+    @property
+    def bearer_token(self) -> str:
+        login_url = reverse("login")
+        response = self.client.post(
+            login_url,
+            data={
+                "email": test_user["email"],
+                "password": test_user["password"],
+            },
+            format="json",
         )
-        self.factory = APIRequestFactory()
+        return response.data.get("access")  # type: ignore[no-any-return,attr-defined]
 
     def test_create_user(self) -> None:
         url = reverse("users")
@@ -44,29 +50,30 @@ class TestUserList(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_user_login(self) -> None:
-        test_data = {
-            "username": fake.user_name(),
-            "email": fake.email(),
-            "password": fake.password(),
-        }
-        url = reverse("users")
-        response = self.client.post(url, data=test_data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         url = reverse("login")
         response = self.client.post(
             url,
             data={
-                "email": test_data["email"],
-                "password": test_data["password"],
+                "email": test_user["email"],
+                "password": test_user["password"],
             },
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_user_list(self) -> None:
+
+        url = reverse("users")
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_create_user_with_existing_email(self) -> None:
         url = reverse("users")
         data = {
             "username": fake.user_name(),
-            "email": self.user.email,
+            "email": self.user.email,  # type: ignore[attr-defined]
             "password": fake.password(),
         }
         response = self.client.post(url, data=data)
@@ -74,18 +81,57 @@ class TestUserList(APITestCase):
 
 
 class TestUserDetail(APITestCase):
-    def setUp(self) -> None:
-        self.user = User.objects.create_user(
-            username=fake.user_name(),
-            email=fake.email(),
-            password=fake.password(),
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create_user(**test_user_2)  # type: ignore[attr-defined]
+
+    @property
+    def bearer_token(self) -> str:
+        login_url = reverse("login")
+        response = self.client.post(
+            login_url,
+            data={
+                "email": test_user_2["email"],
+                "password": test_user_2["password"],
+            },
+            format="json",
         )
-        self.factory = APIRequestFactory()
+        return response.data.get("access")  # type: ignore[no-any-return,attr-defined]
+
+    def test_get_user_detail(self) -> Any:
+        url = reverse("user-detail", kwargs={"lookup_id": self.user.lookup_id})  # type: ignore[attr-defined]
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_user_detail_with_invalid_id(self) -> None:
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
         url = reverse("user-detail", kwargs={"lookup_id": -1})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_user(self) -> None:
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
+        url = reverse("user-detail", kwargs={"lookup_id": self.user.lookup_id})  # type: ignore[attr-defined]
+        username = fake.user_name()
+        response = self.client.patch(url, data={"username": username})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get("username"), username)  # type: ignore[attr-defined]
+
+    def test_delete_user(self) -> None:
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
+        url = reverse("user-detail", kwargs={"lookup_id": self.user.lookup_id})  # type: ignore[attr-defined]
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class PaswwordResetTest(APITestCase):
