@@ -43,7 +43,7 @@ class TestFollowingView(APITestCase):
             data={"email": self.user_two.email, "password": self.password},
             format="json",
         )
-        token = json.loads(response.content).get("access")  # type: ignore
+        token = json.loads(response.content).get("access")  # type: ignore[attr-defined]
         return {"HTTP_AUTHORIZATION": f"Bearer {token}"}
 
     def test_unauthorized_user_follow(self) -> None:
