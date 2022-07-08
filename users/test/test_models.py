@@ -2,16 +2,33 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from faker import Faker
 
+from users.models import Profile
+
 fake = Faker()
 User = get_user_model()
 
 
 class UserModelTest(TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        data = {
+            "username": fake.name(),
+            "email": fake.email(),
+            "password": fake.password(),
+        }
+
+        cls.user = User.objects.create_user(**data)  # type: ignore[attr-defined]
+
     def test_create_user(self) -> None:
-        user = User.objects.create_user(
-            email=fake.email(), password=fake.password()
-        )
-        self.assertNotEqual(user.email, fake.email())
+        data = {
+            "username": fake.name(),
+            "email": fake.email(),
+            "password": fake.password(),
+        }
+        user = User.objects.create_user(**data)
+        self.assertEqual(user.email, data["email"])
+        self.assertEqual(user.username, data["username"])
 
     def test_password_exception_raised(self) -> None:
         with self.assertRaises(ValueError):
@@ -67,6 +84,18 @@ class UserModelTest(TestCase):
 
     def test_user_representation_is_email(self) -> None:
         user = User.objects.create_user(
-            email=fake.email(), password=fake.password()
+            username=fake.name(), email=fake.email(), password=fake.password()
         )
         self.assertEqual(str(user), user.email)
+
+    def test_user_profile(self) -> None:
+        profile = Profile.objects.create(
+            user=self.user,  # type: ignore[attr-defined]
+            bio="try again",
+        )
+
+        self.assertEqual(str(profile), self.user.username)  # type: ignore[attr-defined]
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()

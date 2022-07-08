@@ -29,15 +29,21 @@ class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    user: Any = serializers.SlugRelatedField(
-        read_only=True, slug_field="username"
+    username: Any = serializers.CharField(
+        read_only=True, source="user.username"
     )
     bio = serializers.CharField(allow_blank=True, required=False)
     image = serializers.ImageField(use_url=True, required=False)
 
     class Meta:
         model = Profile
-        fields = "__all__"
+        fields = ("username", "bio", "image")
+
+    def update(self, instance: Any, validated_data: Any) -> Any:
+        instance.bio = validated_data.get("bio")
+        instance.image = validated_data.get("image")
+        instance.save()
+        return instance
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):

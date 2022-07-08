@@ -1,21 +1,23 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from django.utils.encoding import smart_bytes
 from django.utils.http import urlsafe_base64_encode
 from faker import Faker
 from rest_framework import status
 from rest_framework.reverse import reverse
-from rest_framework.test import (
-    APIRequestFactory,
-    APITestCase,
-    force_authenticate,
-)
+from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
+from users.models import Profile
 from users.views import (
     PasswordResetAPIView,
     PasswordResetEmailView,
     ProfileView,
 )
+
+from .mocks import test_image, test_user
 
 fake = Faker()
 User = get_user_model()
@@ -29,24 +31,39 @@ profile_view = ProfileView.as_view()
 
 class ProfileTest(APITestCase):
     def setUp(self) -> None:
-        self.user = User.objects.create(
-            username=fake.name(),
-            email=fake.email(),
-            password=fake.password(),
+        self.user = User.objects.create_user(**test_user)
+
+        self.client = APIClient()
+
+    @patch(
+        "cloudinary.uploader.upload_resource", return_value=fake.image_url()
+    )
+    def test_profile_update(self, upload_resource: None) -> None:
+        Profile.objects.create(user=self.user)
+        login_url = reverse("login")
+        res = self.client.post(
+            login_url,
+            data={
+                "email": test_user["email"],
+                "password": test_user["password"],
+            },
+            format="json",
+        )
+        data = {"bio": "test validity", "image": test_image}
+        url = reverse("profile", kwargs={"pk": self.user.id})
+        self.client.defaults[
+            "HTTP_AUTHORIZATION"
+        ] = f"Bearer {res.data['access']}"  # type: ignore[attr-defined]
+        response = self.client.patch(
+            url,
+            kwargs={"pk": self.user.id},
+            data=encode_multipart(data=data, boundary=BOUNDARY),
+            content_type=MULTIPART_CONTENT,
+            enctype="multipart/form-data",
         )
 
-        self.factory = APIRequestFactory()
-
-    def test_user_profile_setup(self) -> None:
-        url = reverse("profile")
-        data = {"bio": "Win self"}
-
-        request = self.factory.post(url, data=data, format="json")
-        force_authenticate(request, user=self.user)
-        response = profile_view(request)
+        self.assertTrue(upload_resource.called)  # type: ignore
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response.render()
-        self.assertEqual(response.data["bio"], "Win self")
 
 
 class PaswwordResetTest(APITestCase):

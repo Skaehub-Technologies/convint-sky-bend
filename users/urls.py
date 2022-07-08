@@ -14,7 +14,7 @@ urlpatterns = [
         UserTokenObtainPairView.as_view(),
         name="login",
     ),
-    path("profile/", ProfileView.as_view(), name="profile"),
+    path("auth/profile/<int:pk>/", ProfileView.as_view(), name="profile"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="refresh"),
     path(
         "auth/reset-password-request/",

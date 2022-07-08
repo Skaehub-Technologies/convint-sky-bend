@@ -1,8 +1,9 @@
 from typing import Any
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -22,26 +23,16 @@ class UserTokenObtainPairView(TokenObtainPairView):  # type: ignore
     serializer_class = UserTokenObtainPairSerializer
 
 
-class ProfileView(UpdateAPIView):
+class ProfileView(RetrieveUpdateAPIView):
 
     permission_classes = (IsAuthenticated,)
     serializer_class = ProfileSerializer
     queryset = Profile.objects.all()
 
-    def post(self, request: Any) -> Any:
-        current_user = request.user
-        data = request.data
-        profile = Profile.objects.filter(user=current_user.pk)
-        if profile:
-            serializer = ProfileSerializer(profile)
-            return Response(serializer.data)
-        else:
-            serializer = ProfileSerializer(data=data)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save(user=current_user)
-                new_data = serializer.data
-                return Response(new_data)
-            return Response(serializer.errors)
+    def get_object(self) -> Any:
+        profile = get_object_or_404(Profile, user__id=self.kwargs.get("pk"))
+
+        return profile
 
 
 class PasswordResetEmailView(generics.GenericAPIView):
