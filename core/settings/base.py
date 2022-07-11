@@ -7,6 +7,7 @@ import cloudinary
 import cloudinary.api
 import cloudinary.uploader
 import dj_database_url
+import django_heroku
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -160,3 +161,6 @@ EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USER = os.getenv("EMAIL_USER")
+
+# django heroku settings
+django_heroku.settings(locals())

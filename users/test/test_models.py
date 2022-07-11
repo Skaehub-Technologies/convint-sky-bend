@@ -18,7 +18,7 @@ class UserModelTest(TestCase):
             "password": fake.password(),
         }
 
-        cls.user = User.objects.create_user(**data)  # type: ignore[attr-defined]
+        cls.user = User.objects.create_user(**data)  # type:ignore
 
     def test_create_user(self) -> None:
         data = {
@@ -90,11 +90,11 @@ class UserModelTest(TestCase):
 
     def test_user_profile(self) -> None:
         profile = Profile.objects.create(
-            user=self.user,  # type: ignore[attr-defined]
+            user=self.user,  # type:ignore
             bio="try again",
         )
 
-        self.assertEqual(str(profile), self.user.username)  # type: ignore[attr-defined]
+        self.assertEqual(str(profile), self.user.username)  # type:ignore
 
     @classmethod
     def tearDownClass(cls) -> None:
