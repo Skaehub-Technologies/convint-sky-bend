@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from faker import Faker
@@ -9,6 +11,8 @@ User = get_user_model()
 
 
 class UserModelTest(TestCase):
+    user: Any
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
@@ -18,7 +22,7 @@ class UserModelTest(TestCase):
             "password": fake.password(),
         }
 
-        cls.user = User.objects.create_user(**data)  # type:ignore
+        cls.user = User.objects.create_user(**data)
 
     def test_create_user(self) -> None:
         data = {
@@ -90,11 +94,11 @@ class UserModelTest(TestCase):
 
     def test_user_profile(self) -> None:
         profile = Profile.objects.create(
-            user=self.user,  # type:ignore
+            user=self.user,
             bio="try again",
         )
 
-        self.assertEqual(str(profile), self.user.username)  # type:ignore
+        self.assertEqual(str(profile), self.user.username)
 
     @classmethod
     def tearDownClass(cls) -> None:
