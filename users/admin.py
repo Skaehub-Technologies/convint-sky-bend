@@ -10,6 +10,8 @@ from django.core.exceptions import ValidationError
 
 from users.models import Profile
 
+from .models import UserFollowing
+
 User = get_user_model()
 
 
@@ -97,3 +99,4 @@ class UserAdmin(BaseUserAdmin):
 admin.site.register(User, UserAdmin)
 admin.site.unregister(Group)
 admin.site.register(Profile)
+admin.site.register(UserFollowing)

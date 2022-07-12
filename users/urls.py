@@ -5,6 +5,7 @@ from .views import (
     PasswordResetAPIView,
     PasswordResetEmailView,
     ProfileView,
+    UserFollowView,
     UserTokenObtainPairView,
 )
 
@@ -25,5 +26,8 @@ urlpatterns = [
         "auth/reset-password-verify/<uidb64>/<token>",
         PasswordResetAPIView.as_view(),
         name="reset-password",
+    ),
+    path(
+        "users/follow/<int:pk>/", UserFollowView.as_view(), name="user-follow"
     ),
 ]

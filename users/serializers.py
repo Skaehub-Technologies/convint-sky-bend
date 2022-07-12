@@ -14,7 +14,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.utils import Util
 
-from .models import Profile
+from .models import Profile, UserFollowing
 
 User = get_user_model()
 
@@ -44,6 +44,54 @@ class ProfileSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get("image")
         instance.save()
         return instance
+
+
+class CreateFollowingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserFollowing
+        fields = ("id", "follower", "followed")
+
+    def validate(self, attrs: Any) -> Any:
+        follower = attrs.get("follower")
+        followed = attrs.get("followed")
+        if follower == followed:
+            raise PermissionDenied("you cannot follow yourself")
+        if UserFollowing.objects.filter(
+            follower=follower, followed=followed
+        ).exists():
+            raise PermissionDenied("you are already following this user")
+        return super().validate(attrs)
+
+
+class UserFollowingSerializer(serializers.ModelSerializer):
+    following = serializers.SerializerMethodField()
+    followers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "following", "followers"]
+
+    def get_following(self, obj: Any) -> Any:
+        return FollowedSerializer(obj.following.all(), many=True).data
+
+    def get_followers(self, obj: Any) -> Any:
+        return FollowersSerializer(obj.followers.all(), many=True).data
+
+
+class FollowedSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source="followed.username")
+
+    class Meta:
+        model = UserFollowing
+        fields = ["followed", "username", "created_at"]
+
+
+class FollowersSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source="follower.username")
+
+    class Meta:
+        model = UserFollowing
+        fields = ["follower", "username", "created_at"]
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
