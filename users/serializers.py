@@ -14,7 +14,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.utils import Util
 
-from .models import UserFollowing
+from .models import Profile, UserFollowing
 
 User = get_user_model()
 
@@ -26,6 +26,24 @@ class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
         token["userID"] = user.id
         token["editor"] = user.is_editor
         return token
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    username: Any = serializers.CharField(
+        read_only=True, source="user.username"
+    )
+    bio = serializers.CharField(allow_blank=True, required=False)
+    image = serializers.ImageField(use_url=True, required=False)
+
+    class Meta:
+        model = Profile
+        fields = ("username", "bio", "image")
+
+    def update(self, instance: Any, validated_data: Any) -> Any:
+        instance.bio = validated_data.get("bio")
+        instance.image = validated_data.get("image")
+        instance.save()
+        return instance
 
 
 class CreateFollowingSerializer(serializers.ModelSerializer):

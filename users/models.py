@@ -1,5 +1,6 @@
 from typing import Any
 
+from cloudinary.models import CloudinaryField
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -60,8 +61,11 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
 class Profile(TimeStampedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    bio = models.TextField(max_length=500, blank=True)
-    image = models.ImageField(upload_to="profile_pics", blank=True)
+    bio = models.TextField(max_length=500, blank=True, null=True)
+    image = CloudinaryField("profile_pics", blank=True, null=True)
+
+    def __str__(self) -> str:
+        return self.user.username
 
 
 class UserFollowing(TimeStampedModel):

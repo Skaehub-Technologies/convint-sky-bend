@@ -2,18 +2,22 @@ from typing import Any
 
 from django.contrib.auth import get_user_model
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.permissions import AllowAny
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from users.models import UserFollowing
 
+from .models import Profile
 from .serializers import (
     CreateFollowingSerializer,
     PasswordResetRequestSerializer,
     PasswordResetSerializer,
+    ProfileSerializer,
     UserFollowingSerializer,
     UserTokenObtainPairSerializer,
 )
@@ -23,6 +27,18 @@ User = get_user_model()
 
 class UserTokenObtainPairView(TokenObtainPairView):  # type: ignore
     serializer_class = UserTokenObtainPairSerializer
+
+
+class ProfileView(RetrieveUpdateAPIView):
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ProfileSerializer
+    queryset = Profile.objects.all()
+
+    def get_object(self) -> Any:
+        profile = get_object_or_404(Profile, user__id=self.kwargs.get("pk"))
+
+        return profile
 
 
 class UserFollowView(APIView):
