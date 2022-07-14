@@ -5,6 +5,7 @@ from .views import (
     PasswordResetAPIView,
     PasswordResetEmailView,
     UserDetail,
+    UserFollowView,
     UserList,
     UserTokenObtainPairView,
     VerifyEmail,
@@ -34,5 +35,8 @@ urlpatterns = [
         "auth/verify-email/<str:uidb64>/<str:token>/",
         VerifyEmail.as_view(),
         name="verify-email",
+    ),
+    path(
+        "users/follow/<int:pk>/", UserFollowView.as_view(), name="user-follow"
     ),
 ]

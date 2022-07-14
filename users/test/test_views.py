@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 from django.contrib.auth import get_user_model
@@ -6,8 +7,9 @@ from django.utils.encoding import smart_bytes
 from django.utils.http import urlsafe_base64_encode
 from faker import Faker
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.reverse import reverse
-from rest_framework.test import APIRequestFactory, APITestCase
+from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from users.views import PasswordResetAPIView, PasswordResetEmailView
 
@@ -134,7 +136,110 @@ class TestUserDetail(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
+class TestFollowingView(APITestCase):
+    def setUp(self) -> None:
+        self.password = fake.password()
+        self.user_one = User.objects.create_user(
+            username=fake.name(), email=fake.email(), password=self.password
+        )
+        self.user_two = User.objects.create_user(
+            username=fake.name(), email=fake.email(), password=self.password
+        )
+        self.client = APIClient()
+
+    @property
+    def bearer_token(self) -> Any:
+        login_url = reverse("login")
+        response = self.client.post(
+            login_url,
+            data={"email": self.user_two.email, "password": self.password},
+            format="json",
+        )
+        token = json.loads(response.content).get("access")  # type: ignore[attr-defined]
+        return {"HTTP_AUTHORIZATION": f"Bearer {token}"}
+
+    def test_unauthorized_user_follow(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        response = self.client.post(
+            url, kwargs={"pk": self.user_one.id}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_unauthorized_user_unfollow(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        response = self.client.delete(
+            url, kwargs={"pk": self.user_one.id}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_authorized_user_follow(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        response = self.client.post(
+            url,
+            kwargs={"pk": self.user_one.id},
+            format="json",
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, text=self.user_one.username)
+
+    def test_authorized_user_unfollow(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        response = self.client.delete(
+            url,
+            kwargs={"pk": self.user_one.id},
+            format="json",
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_authorized_get_followers(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        response = self.client.get(
+            url,
+            kwargs={"pk": self.user_one.id},
+            format="json",
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_user_cannot_follow_self(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_two.id})
+        response = self.client.post(
+            url,
+            kwargs={"pk": self.user_two.id},
+            format="json",
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertRaisesMessage(PermissionDenied, "failed to reset password")
+
+    def test_user_cannot_follow_same_user(self) -> None:
+        url = reverse("user-follow", kwargs={"pk": self.user_two.id})
+
+        self.client.post(
+            url,
+            kwargs={"pk": self.user_two.id},
+            format="json",
+            **self.bearer_token,
+        )
+        response = self.client.post(
+            url,
+            kwargs={"pk": self.user_two.id},
+            format="json",
+            **self.bearer_token,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.assertRaisesMessage(
+            PermissionDenied, "you are already following this user"
+        )
+
+
 class PaswwordResetTest(APITestCase):
+    """test password reset email view"""
+
     def setUp(self) -> None:
         self.user = User.objects.create(
             username=fake.name(), email=fake.email(), password=fake.password()
