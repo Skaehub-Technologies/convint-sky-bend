@@ -1,5 +1,5 @@
-import uuid
 from typing import Any
+from uuid import uuid4
 
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -7,6 +7,8 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 from users.abstracts import TimeStampedModel
 
@@ -41,9 +43,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     username = models.CharField(max_length=255, unique=True)
-    lookup_id = models.UUIDField(
-        unique=True, default=uuid.uuid4, editable=False
-    )
+    lookup_id = models.CharField(max_length=255, unique=True, editable=False)
     email = models.CharField(
         max_length=255, unique=True, verbose_name="user email"
     )
@@ -52,6 +52,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     is_staff = models.BooleanField(default=False)
     is_editor = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
 
     objects = UserManager()
 
@@ -60,6 +61,12 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
     def __str__(self) -> str:
         return self.email
+
+
+@receiver(pre_save, sender=User)
+def uuid_to_hex(instance: Any, **kwargs: Any) -> Any:
+    if instance.lookup_id is None or instance.lookup_id == "":
+        instance.lookup_id = uuid4().hex
 
 
 class Profile(TimeStampedModel):

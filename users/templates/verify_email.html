@@ -1,8 +1,8 @@
 {% autoescape off %}
-Hi {{ user.username }},
+Hi {{ body.user.username }},
 
 You have successfully registered your account.
 
 Please click on the link to confirm your registration,
-http://{{ domain }}{% url 'verify-email' uidb64=uid token=token %}
+{{body.link}}
 {% endautoescape %}

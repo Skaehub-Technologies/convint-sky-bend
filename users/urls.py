@@ -37,6 +37,8 @@ urlpatterns = [
         name="verify-email",
     ),
     path(
-        "users/follow/<int:pk>/", UserFollowView.as_view(), name="user-follow"
+        "users/follow/<str:lookup_id>/",
+        UserFollowView.as_view(),
+        name="user-follow",
     ),
 ]
