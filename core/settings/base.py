@@ -169,21 +169,4 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": False,
 }
 
-# swagger settings
-SWAGGER_SETTINGS = {
-    "SECURITY_DEFINITIONS": {
-        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
-    }
-}
-# cloudinary settings
-cloudinary.config(
-    cloud_name=os.getenv("cloud_name"),
-    api_key=os.getenv("api_key"),
-    api_secret=os.getenv("api_secret"),
-)
-
-DEFAULT_PARSER_CLASSES = (
-    "rest_framework.parsers.JSONParser",
-    "rest_framework.parsers.FormParser",
-    "rest_framework.parsers.MultiPartParser",
-)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
