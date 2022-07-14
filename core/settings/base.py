@@ -7,6 +7,7 @@ import cloudinary
 import cloudinary.api
 import cloudinary.uploader
 import dj_database_url
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -126,13 +127,31 @@ REST_FRAMEWORK = {
 
 # jwt settings
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": False,
 }
 
+# swagger settings
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+    }
+}
+# cloudinary settings
+cloudinary.config(
+    cloud_name=os.getenv("cloud_name"),
+    api_key=os.getenv("api_key"),
+    api_secret=os.getenv("api_secret"),
+)
+
+DEFAULT_PARSER_CLASSES = (
+    "rest_framework.parsers.JSONParser",
+    "rest_framework.parsers.FormParser",
+    "rest_framework.parsers.MultiPartParser",
+)
 # email
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 EMAIL_HOST = "smtp.sendgrid.net"
