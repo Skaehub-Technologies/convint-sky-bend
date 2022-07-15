@@ -40,9 +40,13 @@ class ProfileView(RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ProfileSerializer
     queryset = Profile.objects.all()
+    lookup_field: str = "lookup_id"
+    renderer_classes = (JSONRenderer,)
 
     def get_object(self) -> Any:
-        profile = get_object_or_404(Profile, user__id=self.kwargs.get("pk"))
+        profile = get_object_or_404(
+            self.get_queryset(), user__lookup_id=self.kwargs.get("lookup_id")
+        )
 
         return profile
 

@@ -193,13 +193,12 @@ class ProfileTest(APITestCase):
             format="json",
         )
         data = {"bio": "test validity", "image": test_image}
-        url = reverse("profile", kwargs={"pk": self.user.id})
+        url = reverse("profile", kwargs={"lookup_id": self.user.lookup_id})
         self.client.defaults[
             "HTTP_AUTHORIZATION"
         ] = f"Bearer {res.data['access']}"  # type: ignore[attr-defined]
         response = self.client.patch(
             url,
-            kwargs={"pk": self.user.id},
             data=encode_multipart(data=data, boundary=BOUNDARY),
             content_type=MULTIPART_CONTENT,
             enctype="multipart/form-data",
