@@ -1,70 +1,108 @@
 from typing import Any
 
 from django.contrib.auth import get_user_model
-from django.http import Http404
 from rest_framework import generics, status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.renderers import JSONRenderer
+from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from users.models import UserFollowing
 
+from .permissions import CanRegisterbutcantGetList
 from .serializers import (
     CreateFollowingSerializer,
     PasswordResetRequestSerializer,
     PasswordResetSerializer,
     UserFollowingSerializer,
+    UserSerializer,
     UserTokenObtainPairSerializer,
+    VerifyEmailSerializer,
 )
 
 User = get_user_model()
 
 
-class UserTokenObtainPairView(TokenObtainPairView):  # type: ignore
-    serializer_class = UserTokenObtainPairSerializer
+class UserList(generics.ListCreateAPIView):
+    permission_classes = (CanRegisterbutcantGetList,)
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    renderer_classes = (JSONRenderer,)
 
 
-class UserFollowView(APIView):
-    def get_object(self, pk: Any) -> Any:
-        try:
-            return User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            raise Http404
+class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (CanRegisterbutcantGetList,)
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field: str = "lookup_id"
+    renderer_classes = (JSONRenderer,)
 
-    def get(self, request: Any, pk: Any, format: Any = None) -> Any:
-        user = self.get_object(pk)
-        serializer = UserFollowingSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request: Any, pk: Any, format: Any = None) -> Any:
-        user = request.user
-        follow = self.get_object(pk)
-        serializer = CreateFollowingSerializer(
-            data={"follower": user.id, "followed": follow.id}
+class VerifyEmail(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = VerifyEmailSerializer
+    renderer_classes = (JSONRenderer,)
+
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        serializer = self.get_serializer(
+            data={
+                **request.data,
+                "uidb64": kwargs.get("uidb64"),
+                "token": kwargs.get("token"),
+            }
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        serializer_two = UserFollowingSerializer(follow)
+        return Response("Your email is verified", status=status.HTTP_200_OK)
+
+
+class UserTokenObtainPairView(TokenObtainPairView):  # type: ignore
+    serializer_class = UserTokenObtainPairSerializer
+    renderer_classes = (JSONRenderer,)
+
+
+class UserFollowView(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    lookup_field: str = "lookup_id"
+    renderer_classes = (JSONRenderer,)
+    serializer_class = UserFollowingSerializer
+    queryset = User.objects.all()
+
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = self.get_object()
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = request.user
+        follow = self.get_object()
+        serializer = CreateFollowingSerializer(
+            data={"follower": user.lookup_id, "followed": follow.lookup_id}  # type: ignore[union-attr]
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer_two = self.get_serializer(follow)
         return Response(serializer_two.data, status=status.HTTP_200_OK)
 
-    def delete(self, request: Any, pk: Any, format: Any = None) -> Any:
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = request.user
-        follow = self.get_object(pk)
-        connection = UserFollowing.objects.filter(
+        follow = self.get_object()
+        connection = UserFollowing.objects.filter(  # type: ignore[misc]
             follower=user, followed=follow
         ).first()
         if connection:
             connection.delete()
-        serializer = UserFollowingSerializer(follow)
+        serializer = self.get_serializer(follow)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PasswordResetEmailView(generics.GenericAPIView):
     serializer_class = PasswordResetRequestSerializer
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
+    renderer_classes = (JSONRenderer,)
 
-    def post(self, request: Any, *args: Any, **kwargs: Any) -> Any:
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
 
         serializer = self.get_serializer(
             data={"email": request.data.get("email")}
@@ -77,10 +115,11 @@ class PasswordResetEmailView(generics.GenericAPIView):
 
 
 class PasswordResetAPIView(generics.GenericAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
     serializer_class = PasswordResetSerializer
+    renderer_classes = (JSONRenderer,)
 
-    def patch(self, request: Any, *args: Any, **kwargs: Any) -> Any:
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         serializer = self.get_serializer(
             data={
                 **request.data,
@@ -89,6 +128,7 @@ class PasswordResetAPIView(generics.GenericAPIView):
             }
         )
         serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(
             {"message": "password changed successfully"},
             status=status.HTTP_200_OK,
