@@ -6,18 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0006_alter_userfollowing_follower'),
+        ("users", "0006_alter_userfollowing_follower"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='is_verified',
+            model_name="user",
+            name="is_verified",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='user',
-            name='lookup_id',
-            field=models.CharField(default='7cff56e990e847fcb926bb1a59fca5a4', editable=False, max_length=255, unique=True),
+            model_name="user",
+            name="lookup_id",
+            field=models.CharField(
+                default="7cff56e990e847fcb926bb1a59fca5a4",
+                editable=False,
+                max_length=255,
+                unique=True,
+            ),
         ),
     ]
