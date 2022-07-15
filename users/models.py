@@ -43,7 +43,9 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     username = models.CharField(max_length=255, unique=True)
-    lookup_id = models.CharField(max_length=255, unique=True, editable=False)
+    lookup_id = models.CharField(
+        max_length=255, unique=True, editable=False, default=uuid4().hex
+    )
     email = models.CharField(
         max_length=255, unique=True, verbose_name="user email"
     )
