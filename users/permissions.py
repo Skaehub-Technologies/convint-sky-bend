@@ -6,9 +6,6 @@ from rest_framework import permissions
 class CanRegisterbutcantGetList(permissions.BasePermission):
     def has_permission(self, request: Any, view: Any) -> Any:
         """cannot view list of users but can register new account"""
-        # if not request.user.is_authenticated:
-        # return request.method == "GET"
-        # return request.method == "POST"
         if request.method == "POST":
             return True
         if request.user.is_authenticated:
