@@ -62,11 +62,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ("lookup_id", "username", "email", "password")
 
-    def to_representation(self, instance: Any) -> Any:
-        representation = super().to_representation(instance)
-        representation["lookup_id"] = str(instance.lookup_id)
-        return super().to_representation(instance)
-
     def create(self, validated_data: Any) -> Any:
         user = User.objects.create_user(**validated_data)
         user.save()
