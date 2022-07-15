@@ -1,5 +1,5 @@
 from core.settings.base import ALLOWED_HOSTS
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS += [".herokuapp.com"]
