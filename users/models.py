@@ -1,6 +1,7 @@
 from typing import Any
 from uuid import uuid4
 
+from cloudinary.models import CloudinaryField
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -71,8 +72,11 @@ def uuid_to_hex(instance: Any, **kwargs: Any) -> Any:
 
 class Profile(TimeStampedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    bio = models.TextField(max_length=500, blank=True)
-    image = models.ImageField(upload_to="profile_pics", blank=True)
+    bio = models.TextField(max_length=500, blank=True, null=True)
+    image = CloudinaryField("profile_pics", blank=True, null=True)
+
+    def __str__(self) -> str:
+        return self.user.username
 
 
 class UserFollowing(TimeStampedModel):

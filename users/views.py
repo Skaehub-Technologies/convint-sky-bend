@@ -1,7 +1,9 @@
 from typing import Any
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
@@ -10,11 +12,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from users.models import UserFollowing
 
+from .models import Profile
 from .permissions import CanRegisterbutcantGetList
 from .serializers import (
     CreateFollowingSerializer,
     PasswordResetRequestSerializer,
     PasswordResetSerializer,
+    ProfileSerializer,
     UserFollowingSerializer,
     UserSerializer,
     UserTokenObtainPairSerializer,
@@ -29,6 +33,22 @@ class UserList(generics.ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     renderer_classes = (JSONRenderer,)
+
+
+class ProfileView(RetrieveUpdateAPIView):
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ProfileSerializer
+    queryset = Profile.objects.all()
+    lookup_field: str = "lookup_id"
+    renderer_classes = (JSONRenderer,)
+
+    def get_object(self) -> Any:
+        profile = get_object_or_404(
+            self.get_queryset(), user__lookup_id=self.kwargs.get("lookup_id")
+        )
+
+        return profile
 
 
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):

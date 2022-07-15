@@ -35,6 +35,24 @@ class UserTokenObtainPairSerializer(TokenObtainPairSerializer):  # type: ignore
         return token
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    username: Any = serializers.CharField(
+        read_only=True, source="user.username"
+    )
+    bio = serializers.CharField(allow_blank=True, required=False)
+    image = serializers.ImageField(use_url=True, required=False)
+
+    class Meta:
+        model = Profile
+        fields = ("username", "bio", "image")
+
+    def update(self, instance: Any, validated_data: Any) -> Any:
+        instance.bio = validated_data.get("bio", instance.bio)
+        instance.image = validated_data.get("image", instance.image)
+        instance.save()
+        return instance
+
+
 class UserSerializer(serializers.ModelSerializer):
     lookup_id = serializers.CharField(read_only=True)
     username = serializers.CharField(

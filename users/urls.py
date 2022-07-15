@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     PasswordResetAPIView,
     PasswordResetEmailView,
+    ProfileView,
     UserDetail,
     UserFollowView,
     UserList,
@@ -17,6 +18,7 @@ urlpatterns = [
         UserTokenObtainPairView.as_view(),
         name="login",
     ),
+    path("profile/<str:lookup_id>/", ProfileView.as_view(), name="profile"),
     path("refresh/", TokenRefreshView.as_view(), name="refresh"),
     path("users/", UserList.as_view(), name="users"),
     path("user/<str:lookup_id>/", UserDetail.as_view(), name="user-detail"),

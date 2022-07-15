@@ -1,9 +1,11 @@
 import json
 from typing import Any
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import mail
+from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from django.utils.encoding import smart_bytes
 from django.utils.http import urlsafe_base64_encode
 from faker import Faker
@@ -12,7 +14,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient, APITestCase
 
-from .mocks import test_user, test_user_2
+from users.models import Profile
+
+from .mocks import test_image, test_user, test_user_2
 
 fake = Faker()
 User = get_user_model()
@@ -166,6 +170,42 @@ class TestVerifyEmailView(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("failed to verify", str(response.data))  # type: ignore[attr-defined]
+
+
+class ProfileTest(APITestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(**test_user)
+
+        self.client = APIClient()
+
+    @patch(
+        "cloudinary.uploader.upload_resource", return_value=fake.image_url()
+    )
+    def test_profile_update(self, upload_resource: None) -> None:
+        Profile.objects.create(user=self.user)
+        login_url = reverse("login")
+        res = self.client.post(
+            login_url,
+            data={
+                "email": test_user["email"],
+                "password": test_user["password"],
+            },
+            format="json",
+        )
+        data = {"bio": "test validity", "image": test_image}
+        url = reverse("profile", kwargs={"lookup_id": self.user.lookup_id})
+        self.client.defaults[
+            "HTTP_AUTHORIZATION"
+        ] = f"Bearer {res.data['access']}"  # type: ignore[attr-defined]
+        response = self.client.patch(
+            url,
+            data=encode_multipart(data=data, boundary=BOUNDARY),
+            content_type=MULTIPART_CONTENT,
+            enctype="multipart/form-data",
+        )
+
+        self.assertTrue(upload_resource.called)  # type: ignore
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestFollowingView(APITestCase):
