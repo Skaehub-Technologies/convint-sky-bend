@@ -40,7 +40,7 @@ class UserModelTest(TestCase):
                 username=fake.name(), email=fake.email(), password=""
             )
 
-    def test_Email_exception_raised(self) -> None:
+    def test_email_exception_raised(self) -> None:
         with self.assertRaises(ValueError):
             User.objects.create_user(
                 username=fake.name(), email="", password=fake.password()
@@ -70,7 +70,7 @@ class UserModelTest(TestCase):
                 username="", email="", password=fake.password()
             )
 
-    def test_superuser_staff_error(self) -> None:
+    def test_superuser_is_staff_error(self) -> None:
         user = User.objects.create_superuser(
             email=fake.email(),
             password=fake.password(),
@@ -91,6 +91,21 @@ class UserModelTest(TestCase):
             username=fake.name(), email=fake.email(), password=fake.password()
         )
         self.assertEqual(str(user), user.email)
+
+
+class TestProfile(TestCase):
+    user: Any
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        data = {
+            "username": fake.name(),
+            "email": fake.email(),
+            "password": fake.password(),
+        }
+
+        cls.user = User.objects.create_user(**data)
 
     def test_user_profile(self) -> None:
         profile = Profile.objects.create(

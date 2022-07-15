@@ -20,14 +20,13 @@ class ProfileTest(APITestCase):
 
         self.serializer_data = {"bio": "keep at it"}
 
-    def test_serializers_has_expected_fields(self) -> None:
-        data = self.serializer_data
-        self.assertEqual(set(data.values()), set(["keep at it"]))
-
     def test_profile_update(self) -> None:
         self.serializer_data["bio"] = "try again"
 
         serializer = ProfileSerializer(data=self.serializer_data)
 
         self.assertTrue(serializer.is_valid())
-        self.assertNotEqual(set(serializer.errors), set(["bio"]))
+        serializer.save()
+        self.assertEqual(
+            serializer.data.get("bio"), self.serializer_data.get("bio")
+        )

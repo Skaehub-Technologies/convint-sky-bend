@@ -20,3 +20,9 @@ image_file.seek(0)
 test_image = SimpleUploadedFile(
     "test.png", image_file.read(), content_type="image/png"
 )
+
+test_user_2 = {
+    "username": fake.user_name(),
+    "password": fake.password(),
+    "email": fake.email(),
+}

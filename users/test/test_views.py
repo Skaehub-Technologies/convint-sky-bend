@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core import mail
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from django.utils.encoding import smart_bytes
 from django.utils.http import urlsafe_base64_encode
@@ -11,25 +12,164 @@ from faker import Faker
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.reverse import reverse
-from rest_framework.test import APIClient, APIRequestFactory, APITestCase
+from rest_framework.test import APIClient, APITestCase
 
 from users.models import Profile
-from users.views import (
-    PasswordResetAPIView,
-    PasswordResetEmailView,
-    ProfileView,
-)
 
-from .mocks import test_image, test_user
+from .mocks import test_image, test_user, test_user_2
 
 fake = Faker()
 User = get_user_model()
-password_reset_email_view = PasswordResetEmailView.as_view()
-password_reset_api_view = PasswordResetAPIView.as_view()
 
 
-User = get_user_model()
-profile_view = ProfileView.as_view()
+class TestUserList(APITestCase):
+    user: Any
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create_user(**test_user)
+
+    @property
+    def bearer_token(self) -> str:
+        login_url = reverse("login")
+        response = self.client.post(
+            login_url,
+            data={
+                "email": test_user["email"],
+                "password": test_user["password"],
+            },
+            format="json",
+        )
+        return response.data.get("access")  # type: ignore[no-any-return,attr-defined]
+
+    def test_create_user(self) -> None:
+        url = reverse("users")
+        data = {
+            "username": fake.user_name(),
+            "email": fake.email(),
+            "password": fake.password(),
+        }
+        outbox = len(mail.outbox)
+        response = self.client.post(url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), outbox + 1)
+
+    def test_user_login(self) -> None:
+        url = reverse("login")
+        response = self.client.post(
+            url,
+            data={
+                "email": test_user["email"],
+                "password": test_user["password"],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_user_list(self) -> None:
+
+        url = reverse("users")
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_create_user_with_existing_email(self) -> None:
+        url = reverse("users")
+        data = {
+            "username": fake.user_name(),
+            "email": self.user.email,
+            "password": fake.password(),
+        }
+        response = self.client.post(url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class TestUserDetail(APITestCase):
+    user: Any
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = User.objects.create_user(**test_user_2)
+
+    @property
+    def bearer_token(self) -> str:
+        login_url = reverse("login")
+        response = self.client.post(
+            login_url,
+            data={
+                "email": test_user_2["email"],
+                "password": test_user_2["password"],
+            },
+            format="json",
+        )
+        return response.data.get("access")  # type: ignore[no-any-return,attr-defined]
+
+    def test_get_user_detail(self) -> Any:
+        url = reverse("user-detail", kwargs={"lookup_id": self.user.lookup_id})
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_user_detail_with_invalid_id(self) -> None:
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
+        url = reverse("user-detail", kwargs={"lookup_id": -1})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_user(self) -> None:
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
+        url = reverse("user-detail", kwargs={"lookup_id": self.user.lookup_id})
+        username = fake.user_name()
+        response = self.client.patch(url, data={"username": username})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get("username"), username)  # type: ignore[attr-defined]
+
+    def test_delete_user(self) -> None:
+        self.client.credentials(  # type: ignore[attr-defined]
+            HTTP_AUTHORIZATION=f"Bearer {self.bearer_token}"
+        )
+        url = reverse("user-detail", kwargs={"lookup_id": self.user.lookup_id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class TestVerifyEmailView(APITestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(**test_user)
+        self.client = APIClient()
+
+    def test_verify_email(self) -> None:
+        uidb64 = urlsafe_base64_encode(smart_bytes(self.user.lookup_id))
+        token = PasswordResetTokenGenerator().make_token(self.user)
+        url = reverse(
+            "verify-email", kwargs={"uidb64": uidb64, "token": token}
+        )
+        response = self.client.post(
+            url, data={"uidb64": uidb64, "token": token}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, "Your email is verified")  # type: ignore[attr-defined]
+
+    def test_verify_email_with_invalid_uidb64(self) -> None:
+        uidb64 = urlsafe_base64_encode(smart_bytes(-1))
+        token = PasswordResetTokenGenerator().make_token(self.user)
+        url = reverse(
+            "verify-email", kwargs={"uidb64": uidb64, "token": token}
+        )
+        response = self.client.post(
+            url, data={"uidb64": uidb64, "token": token}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("failed to verify", str(response.data))  # type: ignore[attr-defined]
 
 
 class ProfileTest(APITestCase):
@@ -92,24 +232,25 @@ class TestFollowingView(APITestCase):
         return {"HTTP_AUTHORIZATION": f"Bearer {token}"}
 
     def test_unauthorized_user_follow(self) -> None:
-        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
-        response = self.client.post(
-            url, kwargs={"pk": self.user_one.id}, format="json"
+        url = reverse(
+            "user-follow", kwargs={"lookup_id": self.user_one.lookup_id}
         )
+        response = self.client.post(url, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_unauthorized_user_unfollow(self) -> None:
-        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
-        response = self.client.delete(
-            url, kwargs={"pk": self.user_one.id}, format="json"
+        url = reverse(
+            "user-follow", kwargs={"lookup_id": self.user_one.lookup_id}
         )
+        response = self.client.delete(url, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_authorized_user_follow(self) -> None:
-        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        url = reverse(
+            "user-follow", kwargs={"lookup_id": self.user_one.lookup_id}
+        )
         response = self.client.post(
             url,
-            kwargs={"pk": self.user_one.id},
             format="json",
             **self.bearer_token,
         )
@@ -117,30 +258,40 @@ class TestFollowingView(APITestCase):
         self.assertContains(response, text=self.user_one.username)
 
     def test_authorized_user_unfollow(self) -> None:
-        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        self.client.post(
+            reverse(
+                "user-follow", kwargs={"lookup_id": self.user_one.lookup_id}
+            ),
+            format="json",
+            **self.bearer_token,
+        )
+        url = reverse(
+            "user-follow", kwargs={"lookup_id": self.user_one.lookup_id}
+        )
         response = self.client.delete(
             url,
-            kwargs={"pk": self.user_one.id},
             format="json",
             **self.bearer_token,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_authorized_get_followers(self) -> None:
-        url = reverse("user-follow", kwargs={"pk": self.user_one.id})
+        url = reverse(
+            "user-follow", kwargs={"lookup_id": self.user_one.lookup_id}
+        )
         response = self.client.get(
             url,
-            kwargs={"pk": self.user_one.id},
             format="json",
             **self.bearer_token,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_user_cannot_follow_self(self) -> None:
-        url = reverse("user-follow", kwargs={"pk": self.user_two.id})
+        url = reverse(
+            "user-follow", kwargs={"lookup_id": self.user_two.lookup_id}
+        )
         response = self.client.post(
             url,
-            kwargs={"pk": self.user_two.id},
             format="json",
             **self.bearer_token,
         )
@@ -148,17 +299,17 @@ class TestFollowingView(APITestCase):
         self.assertRaisesMessage(PermissionDenied, "failed to reset password")
 
     def test_user_cannot_follow_same_user(self) -> None:
-        url = reverse("user-follow", kwargs={"pk": self.user_two.id})
+        url = reverse(
+            "user-follow", kwargs={"lookup_id": self.user_two.lookup_id}
+        )
 
         self.client.post(
             url,
-            kwargs={"pk": self.user_two.id},
             format="json",
             **self.bearer_token,
         )
         response = self.client.post(
             url,
-            kwargs={"pk": self.user_two.id},
             format="json",
             **self.bearer_token,
         )
@@ -177,7 +328,7 @@ class PaswwordResetTest(APITestCase):
         self.user = User.objects.create(
             username=fake.name(), email=fake.email(), password=fake.password()
         )
-        self.factory = APIRequestFactory()
+        self.client = APIClient()
 
     def test_password_reset_request(self) -> None:
         url = reverse("reset-password-request")
@@ -188,42 +339,32 @@ class PaswwordResetTest(APITestCase):
     def test_password_reset_email(self) -> None:
         url = reverse("reset-password-request")
 
-        request = self.factory.post(
+        response = self.client.post(
             url, {"email": self.user.email}, format="json"
         )
-        response = password_reset_email_view(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response.render()
         self.assertEqual(
-            response.data,
+            response.data,  # type: ignore[attr-defined]
             {"message": "check your email for password reset link"},
         )
 
     def test_password_reset_no_email(self) -> None:
         url = reverse("reset-password-request")
-        request = self.factory.post(url, format="json")
-        response = password_reset_email_view(request)
+        response = self.client.post(url, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_reset_newpassword(self) -> None:
-        uidb64 = urlsafe_base64_encode(smart_bytes(self.user.id))
+        uidb64 = urlsafe_base64_encode(smart_bytes(self.user.lookup_id))
         token = PasswordResetTokenGenerator().make_token(self.user)
         url = reverse(
             "reset-password", kwargs={"uidb64": uidb64, "token": token}
         )
-        request = self.factory.patch(
-            url, data={"password": "new_password"}, format="json"
+        response = self.client.patch(
+            url, data={"password": fake.password()}, format="json"
         )
-        response = password_reset_api_view(
-            request,
-            data={"password": "new_password"},
-            uidb64=uidb64,
-            token=token,
-        )
-        response.render()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response.data, {"message": "password changed successfully"}
+            response.data, {"message": "password changed successfully"}  # type: ignore[attr-defined]
         )
 
     def test_password_reset_wrong_token(self) -> None:
@@ -232,34 +373,20 @@ class PaswwordResetTest(APITestCase):
         url = reverse(
             "reset-password", kwargs={"uidb64": uidb64, "token": token}
         )
-        request = self.factory.patch(
-            url, data={"password": "new_password"}, format="json"
+        response = self.client.patch(
+            url, data={"password": fake.password()}, format="json"
         )
-        response = password_reset_api_view(
-            request,
-            data={"password": "new_password"},
-            uidb64=uidb64,
-            token=f"{token}X",
-        )
-        response.render()
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data, {"detail": "failed to reset password"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("failed to reset password", response.data["detail"])  # type: ignore[attr-defined]
 
     def test_password_reset_verify_wrong_uidb64(self) -> None:
-        uidb64 = urlsafe_base64_encode(smart_bytes(self.user.id))
+        uidb64 = urlsafe_base64_encode(smart_bytes("cetrt5t56"))
         token = PasswordResetTokenGenerator().make_token(self.user)
         url = reverse(
             "reset-password", kwargs={"uidb64": uidb64, "token": token}
         )
-        request = self.factory.patch(
-            url, data={"password": "new_password"}, format="json"
+        response = self.client.patch(
+            url, data={"password": fake.password()}, format="json"
         )
-        response = password_reset_api_view(
-            request,
-            data={"password": "new_password"},
-            uidb64=f"{uidb64}X",
-            token=token,
-        )
-        response.render()
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data, {"detail": "failed to reset password"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("failed to reset password", response.data["detail"])  # type: ignore[attr-defined]
