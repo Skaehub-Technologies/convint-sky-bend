@@ -51,7 +51,9 @@ class TestUserList(APITestCase):
             "password": fake.password(),
         }
         outbox = len(mail.outbox)
+        # import pdb; pdb.set_trace()
         response = self.client.post(url, data=data)
+        print(response)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), outbox + 1)
 
