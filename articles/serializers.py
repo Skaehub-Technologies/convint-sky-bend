@@ -16,7 +16,7 @@ class ArticleSerializer(TaggitSerializer, serializers.ModelSerializer):  # type:
         use_url=True, required=False, allow_null=True
     )
     tags = TagListSerializerField()
-    title = serializers.CharField(max_length=255, required=True, min_length=10)
+    title = serializers.CharField(max_length=255, min_length=10)
     body = serializers.CharField(required=True, min_length=50)
 
     class Meta:

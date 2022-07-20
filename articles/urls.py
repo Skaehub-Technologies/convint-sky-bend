@@ -9,14 +9,4 @@ urlpatterns = [
         ArticleDetailView.as_view(),
         name="article-detail",
     ),
-    path(
-        "articles/<slug:slug>/delete/",
-        ArticleDetailView.as_view(),
-        name="article-delete",
-    ),
-    path(
-        "articles/<slug:slug>/edit/",
-        ArticleDetailView.as_view(),
-        name="article-edit",
-    ),
 ]

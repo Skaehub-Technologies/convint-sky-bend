@@ -1,12 +1,13 @@
 import uuid
-from operator import attrgetter
 from typing import Any
 
-from autoslug import AutoSlugField
 from cloudinary.models import CloudinaryField
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.signals import post_save, pre_save
+from django.dispatch import receiver
+from django.utils.text import slugify
 from taggit.managers import TaggableManager
 
 from users.abstracts import TimeStampedModel
@@ -14,31 +15,16 @@ from users.abstracts import TimeStampedModel
 User = get_user_model()
 
 
-def get_populate_from(instance: Any) -> str:
-    attrs = [attr.replace("__", ".") for attr in instance.AUTOSLUG_FIELDS]
-    attrs_values = [attrgetter(attr)(instance) for attr in attrs]
-    attrs_values = [str(value) for value in attrs_values]
-    attrs_values = [value.split("+")[0] for value in attrs_values]
-    return "-".join(attrs_values)
-
-
 class Article(TimeStampedModel):
-
-    AUTOSLUG_FIELDS = ["title", "created_at"]
 
     lookup_id = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True, max_length=255
     )
-    slug = AutoSlugField(
-        populate_from=get_populate_from,
-        unique_with=["title", "created_at"],
-        null=True,
-        blank=True,
-    )
-    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
+    title = models.CharField(max_length=255, blank=False, null=False)
     description = models.CharField(max_length=255, blank=True, null=True)
     image = CloudinaryField("post_images", blank=True, null=True)
-    body = models.TextField()
+    body = models.TextField(blank=False, null=False)
     tags = TaggableManager()
     is_hidden = models.BooleanField(default=False)
     favorited = models.BooleanField(default=False)
@@ -49,11 +35,23 @@ class Article(TimeStampedModel):
         User, on_delete=models.SET_NULL, related_name="author", null=True
     )
 
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        super().save(*args, **kwargs)
-
     class Meta:
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
         return self.title
+
+
+@receiver(pre_save, sender=Article)
+def slug_pre_save(sender: Any, instance: Any, **kwargs: Any) -> Any:
+    if instance.slug is None or instance.slug == "":
+        instance.slug = slugify(f"{instance.title}-{instance.lookup_id}")
+
+
+@receiver(post_save, sender=Article)
+def slug_post_save(
+    sender: Any, instance: Any, created: Any, **kwargs: Any
+) -> Any:
+    if instance.slug is None or instance.slug == "":
+        instance.slug = slugify(f"{instance.title}-{instance.lookup_id}")
+        instance.save()

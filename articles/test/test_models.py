@@ -1,27 +1,23 @@
 from django.test import TestCase
+from django.utils.text import slugify
 from faker import Faker
 
-from articles.models import Article, get_populate_from
+from articles.models import Article
+
+fake = Faker()
 
 
 class TestArticleModel(TestCase):
     def setUp(self) -> None:
-        self.fake = Faker()
         self.data = {
-            "title": self.fake.name(),
-            "description": self.fake.text(),
-            "body": self.fake.text(),
-            "image": self.fake.image_url(),
+            "title": fake.name(),
+            "description": fake.text(),
+            "body": fake.text(),
+            "image": fake.image_url(),
             "is_hidden": False,
             "favorited": False,
             "favoritesCount": 0,
         }
-
-    def sample_slug(self, str: str) -> str:
-        special_chars = "!@#$%^&*()_+{}|:<>?[];'./,`~"
-        for char in special_chars:
-            str = str.replace(char, "")
-        return "-".join(str.split())
 
     def test_create_article(self) -> None:
         article = Article.objects.create(**self.data)
@@ -33,11 +29,6 @@ class TestArticleModel(TestCase):
         self.assertEqual(article.favorited, self.data["favorited"])
         self.assertEqual(article.favoritesCount, self.data["favoritesCount"])
 
-    def test_delete_article(self) -> None:
-        article = Article.objects.create(**self.data)
-        article.delete()
-        self.assertEqual(Article.objects.count(), 0)
-
     def test_str_article(self) -> None:
         article = Article.objects.create(**self.data)
         self.assertEqual(str(article), article.title)
@@ -45,5 +36,5 @@ class TestArticleModel(TestCase):
     def test_slug_article(self) -> None:
         article = Article.objects.create(**self.data)
         self.assertEqual(
-            article.slug, self.sample_slug(get_populate_from(article).lower())
+            article.slug, slugify(f"{article.title}-{article.lookup_id}")
         )

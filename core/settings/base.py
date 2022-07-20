@@ -31,10 +31,10 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
+    "taggit",
     # app imports
     "users",
     "articles",
-    "taggit",
 ]
 
 ROOT_URLCONF = "core.urls"

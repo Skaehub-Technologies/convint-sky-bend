@@ -95,20 +95,17 @@ class UserSerializer(serializers.ModelSerializer):
     def to_representation(self, instance: Any) -> Any:
 
         """check if the user is being followed and return the following field as true or false"""
-
-        if self.context.get("request").user.is_authenticated:  # type: ignore[union-attr]
+        request = self.context.get("request")
+        representation = super().to_representation(instance)
+        if request.user.is_authenticated:  # type: ignore[union-attr]
             if (
-                self.context.get("request")  # type: ignore[union-attr]
-                .user.following.all()
+                request.user.following.all()  # type: ignore[union-attr]
                 .filter(followed=instance)
                 .exists()
             ):
-                representation = super().to_representation(instance)
                 return {**representation, "following": True}
-            else:
-                representation = super().to_representation(instance)
-                return {**representation, "following": False}
-        return super().to_representation(instance)
+            return {**representation, "following": False}
+        return representation
 
 
 class VerifyEmailSerializer(serializers.Serializer):
