@@ -43,7 +43,7 @@ class Article(TimeStampedModel):
 
 
 @receiver(pre_save, sender=Article)
-def slug_pre_save(sender: Any, instance: Any, **kwargs: Any) -> Any:
+def slug_pre_save(sender: Any, instance: Any, **kwargs: Any) -> None:
     if instance.slug is None or instance.slug == "":
         instance.slug = slugify(f"{instance.title}-{instance.lookup_id}")
 
@@ -51,7 +51,7 @@ def slug_pre_save(sender: Any, instance: Any, **kwargs: Any) -> Any:
 @receiver(post_save, sender=Article)
 def slug_post_save(
     sender: Any, instance: Any, created: Any, **kwargs: Any
-) -> Any:
+) -> None:
     if instance.slug is None or instance.slug == "":
         instance.slug = slugify(f"{instance.title}-{instance.lookup_id}")
         instance.save()

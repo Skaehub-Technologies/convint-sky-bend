@@ -11,7 +11,7 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APIClient, APITestCase
 
 from articles.models import Article
-from articles.test.mocks import sample_data, sample_image
+from articles.tests.mocks import sample_data, sample_image
 
 fake = Faker()
 User = get_user_model()
@@ -240,3 +240,23 @@ class TestArticleViews(APITestCase):
             json.loads(response.content).get("detail"),
             "Authentication credentials were not provided.",
         )
+
+    def test_get_article_with_invalid_slug_fail(self) -> None:
+        url = reverse("article-detail", kwargs={"slug": self.article.slug})
+        response = self.client.get(
+            url,
+            **self.bearer_token,
+        )
+        data = {"slug": "updated-slug"}
+        response = self.client.patch(
+            url,
+            data=encode_multipart(data=data, boundary=BOUNDARY),
+            content_type=MULTIPART_CONTENT,
+            enctype="multipart/form-data",
+            **self.bearer_token,
+        )
+        response = self.client.get(
+            url,
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
