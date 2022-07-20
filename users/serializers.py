@@ -78,7 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("lookup_id", "username", "email", "password")
+        fields = ("lookup_id", "username", "email", "password", "is_editor")
 
     def create(self, validated_data: Any) -> Any:
         user = User.objects.create_user(**validated_data)
@@ -91,6 +91,21 @@ class UserSerializer(serializers.ModelSerializer):
         )
         send_email("verify_email.html", email_data)
         return user
+
+    def to_representation(self, instance: Any) -> Any:
+
+        """check if the user is being followed and return the following field as true or false"""
+        request = self.context.get("request")
+        representation = super().to_representation(instance)
+        if request.user.is_authenticated:  # type: ignore[union-attr]
+            if (
+                request.user.following.all()  # type: ignore[union-attr]
+                .filter(followed=instance)
+                .exists()
+            ):
+                return {**representation, "following": True}
+            return {**representation, "following": False}
+        return representation
 
 
 class VerifyEmailSerializer(serializers.Serializer):
