@@ -38,9 +38,3 @@ class TestArticleModel(TestCase):
         self.assertEqual(
             article.slug, slugify(f"{article.title}-{article.lookup_id}")
         )
-
-    # def test_article_post_save(self) -> None:
-    #     article = Article.objects.create(**self.data)
-    #     self.assertEqual(
-    #         article.slug, slugify(f"{article.title}-{article.lookup_id}")
-    #     )
