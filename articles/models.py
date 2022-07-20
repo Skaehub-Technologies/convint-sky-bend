@@ -5,7 +5,7 @@ from cloudinary.models import CloudinaryField
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.text import slugify
 from taggit.managers import TaggableManager
@@ -46,12 +46,3 @@ class Article(TimeStampedModel):
 def slug_pre_save(sender: Any, instance: Any, **kwargs: Any) -> None:
     if instance.slug is None or instance.slug == "":
         instance.slug = slugify(f"{instance.title}-{instance.lookup_id}")
-
-
-@receiver(post_save, sender=Article)
-def slug_post_save(
-    sender: Any, instance: Any, created: Any, **kwargs: Any
-) -> None:
-    if instance.slug is None or instance.slug == "":
-        instance.slug = slugify(f"{instance.title}-{instance.lookup_id}")
-        instance.save()
