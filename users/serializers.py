@@ -154,10 +154,11 @@ class CreateFollowingSerializer(serializers.ModelSerializer):
 class UserFollowingSerializer(serializers.ModelSerializer):
     following = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
+    lookup_id = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
-        fields = ["id", "username", "following", "followers"]
+        fields = ["lookup_id", "username", "following", "followers"]
 
     def get_following(self, obj: Any) -> Any:
         return FollowedSerializer(obj.following.all(), many=True).data
@@ -168,18 +169,20 @@ class UserFollowingSerializer(serializers.ModelSerializer):
 
 class FollowedSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source="followed.username")
+    lookup_id = serializers.ReadOnlyField(source="followed.lookup_id")
 
     class Meta:
         model = UserFollowing
-        fields = ["followed", "username", "created_at"]
+        fields = ["lookup_id", "username", "created_at"]
 
 
 class FollowersSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source="follower.username")
+    lookup_id = serializers.ReadOnlyField(source="follower.lookup_id")
 
     class Meta:
         model = UserFollowing
-        fields = ["follower", "username", "created_at"]
+        fields = ["lookup_id", "username", "created_at"]
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
