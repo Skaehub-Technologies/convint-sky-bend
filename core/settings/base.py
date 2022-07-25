@@ -31,8 +31,10 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
+    "taggit",
     # app imports
     "users",
+    "articles",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -116,6 +118,9 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
     "TEST_REQUEST_RENDERER_CLASSES": (
         "rest_framework.renderers.MultiPartRenderer",
         "rest_framework.renderers.JSONRenderer",
@@ -157,3 +162,7 @@ EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USER = os.getenv("EMAIL_USER")
+
+
+# taggit settings
+TAGGIT_CASE_INSENSITIVE = True
