@@ -163,9 +163,11 @@ class TestArticleViews(APITestCase):
 
     def test_get_articles(self) -> None:
         response = self.client.get(reverse("articles"), **self.bearer_token)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        json_response = json.loads(response.content)
+        count = Article.objects.count()
+        self.assertEqual(response.data.get("count"), count)
+        json_response = response.json().get("results")
         self.assertEqual(self.article.body, json_response[0].get("body"))
 
     def test_get_article(self) -> None:
