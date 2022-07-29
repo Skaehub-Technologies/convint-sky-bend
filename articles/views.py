@@ -8,7 +8,11 @@ from rest_framework.response import Response
 
 from articles.models import Article
 from articles.permissions import IsAuthorEditorOrReadOnly
-from articles.serializers import ArticleSerializer
+from articles.serializers import (  # type: ignore[attr-defined]
+    ArticleFavoriteSerializer,
+    ArticleSerializer,
+    ArticleUnFavoriteSerializer,
+)
 
 
 class ArticleListView(generics.ListCreateAPIView):
@@ -32,3 +36,19 @@ class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
             {"message": "Article deleted successfully"},
             status=status.HTTP_204_NO_CONTENT,
         )
+
+
+class ArticleFavoriteView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = ArticleFavoriteSerializer
+    lookup_field = "slug"
+    queryset = Article.objects.all()
+    renderer_classes = (JSONRenderer,)
+
+
+class ArticleUnFavoriteView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = ArticleUnFavoriteSerializer
+    lookup_field = "slug"
+    queryset = Article.objects.all()
+    renderer_classes = (JSONRenderer,)
