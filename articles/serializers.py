@@ -4,8 +4,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from taggit.serializers import TaggitSerializer, TagListSerializerField
 
-from articles.models import Article
-from users.serializers import UserSerializer
+from articles.models import Article, Comment
+from users.serializers import ProfileSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -47,3 +47,21 @@ class ArticleSerializer(TaggitSerializer, serializers.ModelSerializer):  # type:
         """set current user as author"""
         validated_data["author"] = self.context.get("request").user  # type: ignore[union-attr]
         return super().create(validated_data)
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = ProfileSerializer(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = (
+            "lookup_id",
+            "body",
+            "createdAt",
+            "updatedAt",
+            "author",
+            "highlight_start",
+            "highlight_end",
+            "highlight_text",
+        )
+        read_only_fields = ("profile",)

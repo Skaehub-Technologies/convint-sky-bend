@@ -11,6 +11,7 @@ from django.utils.text import slugify
 from taggit.managers import TaggableManager
 
 from users.abstracts import TimeStampedModel
+from users.models import Profile
 
 User = get_user_model()
 
@@ -46,3 +47,31 @@ class Article(TimeStampedModel):
 def slug_pre_save(sender: Any, instance: Any, **kwargs: Any) -> None:
     if instance.slug is None or instance.slug == "":
         instance.slug = slugify(f"{instance.title}-{instance.lookup_id}")
+
+
+class Comment(models.Model):
+    """
+    Handles CRUD on a comment that has been made on article
+    """
+
+    lookup_id = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True, max_length=255
+    )
+    body = models.TextField(max_length=500, blank=False, null=False)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+    highlight_start = models.PositiveIntegerField(null=True, blank=True)
+    highlight_end = models.PositiveIntegerField(null=True, blank=True)
+    highlight_text = models.TextField(blank=True, null=True)
+    author = models.ForeignKey(
+        Profile, on_delete=models.CASCADE, related_name="authored"
+    )
+    article = models.ForeignKey(
+        Article, on_delete=models.CASCADE, related_name="article"
+    )
+
+    class Meta:
+        ordering = ["-createdAt"]
+
+    def __str__(self) -> str:
+        return self.body

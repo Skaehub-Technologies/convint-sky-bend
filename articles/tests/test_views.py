@@ -4,14 +4,16 @@ import json
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.forms import ValidationError
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from faker import Faker
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient, APITestCase
 
-from articles.models import Article
+from articles.models import Article, Comment
 from articles.tests.mocks import sample_data, sample_image
+from users.models import Profile
 
 fake = Faker()
 User = get_user_model()
@@ -262,3 +264,307 @@ class TestArticleViews(APITestCase):
             **self.bearer_token,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestCommentViews(APITestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.password = fake.password()
+        cls.client = APIClient()
+        cls.user = User.objects.create_user(
+            username=fake.name(), email=fake.email(), password=cls.password
+        )
+        cls.profile = Profile.objects.create(user=cls.user)
+        cls.article = Article.objects.create(
+            title=fake.text(),
+            body=fake.text(),
+            author=cls.user,
+        )
+        cls.comment = Comment.objects.create(
+            author=cls.profile, article=cls.article, body=fake.text()
+        )
+        cls.data = {
+            "body": fake.text(),
+            "article": cls.article,
+            "author": cls.profile,
+        }
+
+    @property
+    def bearer_token(self) -> dict:
+        login_url = reverse("login")
+        response = self.client.post(
+            login_url,
+            data={"email": self.user.email, "password": self.password},
+            format="json",
+        )
+        token = json.loads(response.content).get("access")
+        return {"HTTP_AUTHORIZATION": f"Bearer {token}"}
+
+    def test_create_comment(
+        self,
+    ) -> None:
+        response = self.client.post(
+            reverse("comments", kwargs={"slug": self.article.slug}),
+            data=self.data,
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(str(self.data.get("body")), self.data.get("body"))
+
+    def test_create_comment_without_authentication(
+        self,
+    ) -> None:
+        response = self.client.post(
+            reverse("comments", kwargs={"slug": self.article.slug}),
+            data=self.data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            json.loads(response.content).get("detail"),
+            "Authentication credentials were not provided.",
+        )
+
+    def test_get_all_comments(
+        self,
+    ) -> None:
+        response = self.client.get(
+            reverse("comments", kwargs={"slug": self.article.slug})
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_comment(
+        self,
+    ) -> None:
+        response = self.client.get(
+            reverse(
+                "comment-detail",
+                kwargs={
+                    "slug": self.article.slug,
+                    "lookup_id": self.comment.lookup_id,
+                },
+            ),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_comment_without_authentication(
+        self,
+    ) -> None:
+        response = self.client.get(
+            reverse(
+                "comment-detail",
+                kwargs={
+                    "slug": self.article.slug,
+                    "lookup_id": self.comment.lookup_id,
+                },
+            ),
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_comment_with_invalid_lookup_id(
+        self,
+    ) -> None:
+        with self.assertRaises(ValidationError):
+            self.client.get(
+                reverse(
+                    "comment-detail",
+                    kwargs={
+                        "slug": self.article.slug,
+                        "lookup_id": "invalid-id",
+                    },
+                ),
+            )
+
+    def test_update_comment(
+        self,
+    ) -> None:
+        data = {"body": fake.text()}
+        response = self.client.put(
+            reverse(
+                "comment-detail",
+                kwargs={
+                    "slug": self.article.slug,
+                    "lookup_id": self.comment.lookup_id,
+                },
+            ),
+            data=data,
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_update_comment_without_authentication(
+        self,
+    ) -> None:
+        data = {"body": fake.text()}
+        response = self.client.patch(
+            reverse(
+                "comment-detail",
+                kwargs={
+                    "slug": self.article.slug,
+                    "lookup_id": self.comment.lookup_id,
+                },
+            ),
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            json.loads(response.content).get("detail"),
+            "Authentication credentials were not provided.",
+        )
+
+    def test_delete_comment(
+        self,
+    ) -> None:
+        response = self.client.delete(
+            reverse(
+                "comment-detail",
+                kwargs={
+                    "slug": self.article.slug,
+                    "lookup_id": self.comment.lookup_id,
+                },
+            ),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_comment_without_authentication(
+        self,
+    ) -> None:
+        response = self.client.delete(
+            reverse(
+                "comment-detail",
+                kwargs={
+                    "slug": self.article.slug,
+                    "lookup_id": self.comment.lookup_id,
+                },
+            ),
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            json.loads(response.content).get("detail"),
+            "Authentication credentials were not provided.",
+        )
+
+
+class TestHighlightCommentViews(APITestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.password = fake.password()
+        cls.client = APIClient()
+        cls.user = User.objects.create_user(
+            username=fake.name(), email=fake.email(), password=cls.password
+        )
+        cls.profile = Profile.objects.create(user=cls.user)
+        cls.article = Article.objects.create(
+            title=fake.text(),
+            body=fake.text(),
+            author=cls.user,
+        )
+
+        start = fake.pyint(min_value=1, max_value=len(cls.article.body))
+        end = fake.pyint(min_value=start, max_value=len(cls.article.body))
+        cls.comment = Comment.objects.create(
+            author=cls.profile,
+            article=cls.article,
+            body=fake.text(),
+            highlight_end=end,
+            highlight_start=start,
+        )
+
+        highlight_start = fake.pyint(
+            min_value=1, max_value=len(cls.article.body)
+        )
+        highlight_end = fake.pyint(
+            min_value=highlight_start, max_value=len(cls.article.body)
+        )
+        cls.data = {
+            "body": fake.text(),
+            "highlight_start": highlight_start,
+            "highlight_end": highlight_end,
+        }
+
+    @property
+    def bearer_token(self) -> dict:
+        login_url = reverse("login")
+        response = self.client.post(
+            login_url,
+            data={"email": self.user.email, "password": self.password},
+            format="json",
+        )
+        token = json.loads(response.content).get("access")
+        return {"HTTP_AUTHORIZATION": f"Bearer {token}"}
+
+    def test_create_highlight_comment(
+        self,
+    ) -> None:
+
+        response = self.client.post(
+            reverse("comments", kwargs={"slug": self.article.slug}),
+            data=self.data,
+            **self.bearer_token,
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_highlight_comment_create_without_authentication(
+        self,
+    ) -> None:
+        response = self.client.post(
+            reverse("comments", kwargs={"slug": self.article.slug}),
+            data=self.data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            json.loads(response.content).get("detail"),
+            "Authentication credentials were not provided.",
+        )
+
+    def test_highlight_comment_create_with_invalid_article(
+        self,
+    ) -> None:
+        response = self.client.post(
+            reverse("comments", kwargs={"slug": "am-here-to-see-the-error"}),
+            data=self.data,
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            json.loads(response.content).get("detail"),
+            "Not found.",
+        )
+
+    def test_highlight_comment_create_with_invalid_highlight_start(
+        self,
+    ) -> None:
+        self.data["highlight_start"] = fake.pyint(
+            min_value=len(self.article.body) + 1
+        )
+        response = self.client.post(
+            reverse("comments", kwargs={"slug": self.article.slug}),
+            data=self.data,
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_highlight_comment_create_with_invalid_highlight_end(
+        self,
+    ) -> None:
+        self.data["highlight_end"] = fake.pyint(
+            min_value=len(self.article.body) + 1
+        )
+        response = self.client.post(
+            reverse("comments", kwargs={"slug": self.article.slug}),
+            data=self.data,
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_highlight_comments(
+        self,
+    ) -> None:
+        response = self.client.get(
+            reverse("comments", kwargs={"slug": self.article.slug})
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
