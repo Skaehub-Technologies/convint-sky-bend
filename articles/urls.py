@@ -17,11 +17,11 @@ urlpatterns = [
     path(
         "articles/<slug:slug>/favorite/",
         ArticleFavoriteView.as_view(),
-        name="article-favourite",
+        name="article-favorite",
     ),
     path(
         "articles/<slug:slug>/unfavorite/",
         ArticleUnFavoriteView.as_view(),
-        name="article-unfavourite",
+        name="article-unfavorite",
     ),
 ]

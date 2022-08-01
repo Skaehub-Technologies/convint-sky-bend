@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from faker import Faker
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient, APITestCase
 
@@ -32,8 +33,6 @@ class TestArticleViews(APITestCase):
             body=fake.text(),
             image=sample_image(),
             is_hidden=False,
-            favorited=False,
-            favoritesCount=0,
             author=cls.user,
         )
         cls.data = {
@@ -43,8 +42,8 @@ class TestArticleViews(APITestCase):
             "image": sample_image(),
             "is_hidden": False,
             "tags": f'["{fake.word()}", "{fake.word()}"]',
-            "favorited": False,
-            "favoritesCount": 0,
+            "likes": [],
+            "dislikes": [],
         }
 
     @property
@@ -167,6 +166,8 @@ class TestArticleViews(APITestCase):
         self.assertEqual(len(response.data), 1)
         json_response = json.loads(response.content)
         self.assertEqual(self.article.body, json_response[0].get("body"))
+        self.assertFalse(json_response[0].get("favorited"))
+        self.assertFalse(json_response[0].get("unfavorited"))
 
     def test_get_article(self) -> None:
         response = self.client.get(
@@ -177,6 +178,8 @@ class TestArticleViews(APITestCase):
         self.assertEqual(
             self.article.body, json.loads(response.content).get("body")
         )
+        self.assertFalse(response.data.get("favorited"))
+        self.assertFalse(response.data.get("unfavorited"))
 
     def test_get_article_with_invalid_slug(self) -> None:
         response = self.client.get(
@@ -260,3 +263,186 @@ class TestArticleViews(APITestCase):
             **self.bearer_token,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_like_article_pass(self) -> None:
+        """test the ability to like an article"""
+        likes = self.article.likes.count()
+        response = self.client.patch(
+            reverse("article-favorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("likes")), likes + 1)
+
+    def test_unlike_article_pass(self) -> None:
+        """test the ability to unlike an article that is already liked. Removes user from the likes list"""
+        likes = self.article.likes.count()
+        response = self.client.patch(
+            reverse("article-favorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        response = self.client.patch(
+            reverse("article-favorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("likes")), likes)
+
+    def test_like_unfavorited_article_removes_the_dislike_entry_pass(
+        self,
+    ) -> None:
+        """
+        test that a like on an unfavorited article removes the dislike entry
+        If a user has already disliked an article, and then likes it, the dislike entry should be removed
+        before being added to the like entry
+        """
+        dislikes = self.article.dislikes.count()
+        likes = self.article.likes.count()
+        response = self.client.patch(
+            reverse("article-unfavorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("dislikes")), dislikes + 1)
+        response = self.client.patch(
+            reverse("article-favorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("likes")), likes + 1)
+        self.assertEqual(len(response.data.get("dislikes")), dislikes)
+
+    def test_dislike_article_pass(self) -> None:
+        """test the ability to dislike an article"""
+        dislikes = self.article.dislikes.count()
+        response = self.client.patch(
+            reverse("article-unfavorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("dislikes")), dislikes + 1)
+        self.assertTrue(response.data.get("unfavorited"))
+        self.assertFalse(response.data.get("favorited"))
+
+    def test_undislike_article_pass(self) -> None:
+        """test the ability to undislike an article. Removes user from the dislikes list"""
+        dislikes = self.article.dislikes.count()
+        response = self.client.patch(
+            reverse("article-unfavorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        response = self.client.patch(
+            reverse("article-unfavorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("dislikes")), dislikes)
+        self.assertFalse(response.data.get("unfavorited"))
+
+    def test_like_article_without_authentication_fail(self) -> None:
+        """test inability to like an article without authentication"""
+        response = self.client.patch(
+            reverse("article-favorite", kwargs={"slug": self.article.slug}),
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            json.loads(response.content).get("detail"),
+            "Authentication credentials were not provided.",
+        )
+        self.assertRaisesMessage(
+            PermissionDenied, "Authentication credentials were not provided."
+        )
+
+    def test_dislike_favorited_article_removes_the_like_entry_pass(
+        self,
+    ) -> None:
+        """
+        test that a dislike on a favorited article removes the like entry
+        If a user has already liked an article, and then dislikes it, the like entry should be removed
+        before being added to the dislike entry
+        """
+        likes = self.article.likes.count()
+        dislikes = self.article.dislikes.count()
+        response = self.client.patch(
+            reverse("article-favorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        response = self.client.patch(
+            reverse("article-unfavorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("likes")), likes)
+        self.assertEqual(len(response.data.get("dislikes")), dislikes + 1)
+
+    def test_unlike_article_without_authentication_fail(self) -> None:
+        """test inability to unlike an article without authentication"""
+        response = self.client.patch(
+            reverse("article-unfavorite", kwargs={"slug": self.article.slug}),
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            json.loads(response.content).get("detail"),
+            "Authentication credentials were not provided.",
+        )
+        self.assertRaisesMessage(
+            PermissionDenied, "Authentication credentials were not provided."
+        )
+
+    def test_article_favourited_by_user_pass(self) -> None:
+        """test that an article is favourited by a user"""
+        response = self.client.patch(
+            reverse("article-favorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data.get("favorited"))
+        self.assertFalse(response.data.get("unfavorited"))
+
+    def test_article_unfavourited_by_user_pass(self) -> None:
+        """test that an article is unfavourited by a user"""
+        response = self.client.patch(
+            reverse("article-unfavorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data.get("favorited"))
+        self.assertTrue(response.data.get("unfavorited"))
+
+    def test_get_article_favorited_by_user_pass(self) -> None:
+        """
+        test that favourited flag is set to true when getting an article that has been liked by the use
+        in context
+        """
+        likes = self.article.likes.count()
+        response = self.client.patch(
+            reverse("article-favorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        response = self.client.get(
+            reverse("article-detail", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("likes")), likes + 1)
+        self.assertFalse(response.data.get("unfavorited"))
+        self.assertTrue(response.data.get("favorited"))
+
+    def test_get_article_unfavorited_by_user_pass(self) -> None:
+        """
+        test that favourited flag is set to false when getting an article that has been disliked by the use
+        in context
+        """
+        dislikes = self.article.dislikes.count()
+        response = self.client.patch(
+            reverse("article-unfavorite", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        response = self.client.get(
+            reverse("article-detail", kwargs={"slug": self.article.slug}),
+            **self.bearer_token,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("dislikes")), dislikes + 1)
+        self.assertFalse(response.data.get("favorited"))
+        self.assertTrue(response.data.get("unfavorited"))

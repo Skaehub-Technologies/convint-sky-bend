@@ -4,7 +4,6 @@ from typing import Any
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
 from taggit.serializers import TaggitSerializer, TagListSerializerField
 
 from articles.models import Article
@@ -129,36 +128,34 @@ class ArticleFavoriteSerializer(serializers.ModelSerializer):
     def update(self, instance: Any, validated_data: Any) -> Any:
         """update the likes of an article"""
         request = self.context.get("request")
-        if request.user.is_authenticated:
-            if request.user in instance.likes.all():
-                instance.likes.remove(request.user)
-                return instance
-            if request.user in instance.dislikes.all():
-                instance.dislikes.remove(request.user)
-            instance.likes.add(request.user)
+
+        if request.user in instance.likes.all():
+            instance.likes.remove(request.user)
             return instance
-        raise PermissionDenied("You must be logged in to like an article")
+        if request.user in instance.dislikes.all():
+            instance.dislikes.remove(request.user)
+        instance.likes.add(request.user)
+        return instance
 
     def to_representation(self, instance: Any) -> Any:
 
         """check if the user liked or disliked an article and return favorited and unfavorited status"""
         request = self.context.get("request")
         representation = super().to_representation(instance)
-        if request.user.is_authenticated:
-            if request.user in instance.likes.all():
-                return {
-                    **representation,
-                    "favorited": True,
-                    "unfavorited": False,
-                }
-            if request.user in instance.dislikes.all():
-                return {
-                    **representation,
-                    "favorited": False,
-                    "unfavorited": True,
-                }
-            return {**representation, "favorited": False, "unfavorited": False}
-        return representation
+
+        if request.user in instance.likes.all():
+            return {
+                **representation,
+                "favorited": True,
+                "unfavorited": False,
+            }
+        if request.user in instance.dislikes.all():
+            return {
+                **representation,
+                "favorited": False,
+                "unfavorited": True,
+            }
+        return {**representation, "favorited": False, "unfavorited": False}
 
 
 class ArticleUnFavoriteSerializer(serializers.ModelSerializer):
@@ -204,33 +201,30 @@ class ArticleUnFavoriteSerializer(serializers.ModelSerializer):
     def update(self, instance: Any, validated_data: Any) -> Any:
         """update the dislikes of an article"""
         request = self.context.get("request")
-        if request.user.is_authenticated:
-            if request.user in instance.dislikes.all():
-                instance.dislikes.remove(request.user)
-                return instance
-            if request.user in instance.likes.all():
-                instance.likes.remove(request.user)
-            instance.dislikes.add(request.user)
+
+        if request.user in instance.dislikes.all():
+            instance.dislikes.remove(request.user)
             return instance
-        raise PermissionDenied("You must be logged in to dislike an article")
+        if request.user in instance.likes.all():
+            instance.likes.remove(request.user)
+        instance.dislikes.add(request.user)
+        return instance
 
     def to_representation(self, instance: Any) -> Any:
 
         """check if the user liked or disliked an article and return favorited and unfavorited status"""
         request = self.context.get("request")
         representation = super().to_representation(instance)
-        if request.user.is_authenticated:
-            if request.user in instance.likes.all():
-                return {
-                    **representation,
-                    "favorited": True,
-                    "unfavorited": False,
-                }
-            if request.user in instance.dislikes.all():
-                return {
-                    **representation,
-                    "favorited": False,
-                    "unfavorited": True,
-                }
-            return {**representation, "favorited": False, "unfavorited": False}
-        return representation
+        if request.user in instance.likes.all():
+            return {
+                **representation,
+                "favorited": True,
+                "unfavorited": False,
+            }
+        if request.user in instance.dislikes.all():
+            return {
+                **representation,
+                "favorited": False,
+                "unfavorited": True,
+            }
+        return {**representation, "favorited": False, "unfavorited": False}

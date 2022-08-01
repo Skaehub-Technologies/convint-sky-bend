@@ -1,7 +1,10 @@
 from typing import Any
 
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -38,16 +41,16 @@ class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
 
 
-class ArticleFavoriteView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+class ArticleFavoriteView(generics.UpdateAPIView):
+    permission_classes = (IsAuthenticated,)
     serializer_class = ArticleFavoriteSerializer
     lookup_field = "slug"
     queryset = Article.objects.all()
     renderer_classes = (JSONRenderer,)
 
 
-class ArticleUnFavoriteView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+class ArticleUnFavoriteView(generics.UpdateAPIView):
+    permission_classes = (IsAuthenticated,)
     serializer_class = ArticleUnFavoriteSerializer
     lookup_field = "slug"
     queryset = Article.objects.all()
