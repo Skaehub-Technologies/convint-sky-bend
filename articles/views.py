@@ -1,6 +1,8 @@
 from typing import Any
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
@@ -16,6 +18,16 @@ class ArticleListView(generics.ListCreateAPIView):
     serializer_class = ArticleSerializer
     queryset = Article.objects.all()
     renderer_classes = (JSONRenderer,)
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = [
+        "favorited",
+        "body",
+        "title",
+        "is_hidden",
+        "description",
+    ]
+    search_fields = ["favorited", "body", "title", "is_hidden", "description"]
+    ordering_fields = ["updated_at"]
 
 
 class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -24,6 +36,16 @@ class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "slug"
     queryset = Article.objects.all()
     renderer_classes = (JSONRenderer,)
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = [
+        "favorited",
+        "body",
+        "title",
+        "is_hidden",
+        "description",
+    ]
+    search_fields = ["favorited", "body", "title", "is_hidden", "description"]
+    ordering_fields = ["updated_at"]
 
     def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """return custom response for DELETE request"""
