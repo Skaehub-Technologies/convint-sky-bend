@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from articles.models import Article
+from articles.models import Article, Comment
 
 
 class ArticleAdmin(admin.ModelAdmin):
@@ -20,3 +20,22 @@ class ArticleAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Article, ArticleAdmin)
+
+
+class CommentAdmin(admin.ModelAdmin):
+    list_display = (
+        "body",
+        "highlight_start",
+        "highlight_end",
+        "highlight_text",
+        "author",
+        "createdAt",
+        "updatedAt",
+    )
+    list_filter = ("createdAt", "updatedAt")
+    search_fields = ("article", "author")
+    ordering = ("-createdAt",)
+    date_hierarchy = "createdAt"
+
+
+admin.site.register(Comment, CommentAdmin)
