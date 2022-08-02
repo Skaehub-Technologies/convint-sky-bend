@@ -64,7 +64,6 @@ class ArticleSerializer(TaggitSerializer, serializers.ModelSerializer):  # type:
         return super().create(validated_data)
 
     def to_representation(self, instance: Any) -> Any:
-
         """check if the user liked or disliked an article and return favorited and unfavorited status"""
         request = self.context.get("request")
         representation = super().to_representation(instance)
@@ -112,11 +111,19 @@ class ArticleFavoriteSerializer(serializers.ModelSerializer):
             "author",
         )
         read_only_fields = [
+            "lookup_id",
+            "slug",
+            "title",
+            "description",
+            "image",
+            "body",
+            "tags",
+            "is_hidden",
+            "likes_count",
+            "dislikes_count",
             "created_at",
             "updated_at",
             "author",
-            "likes",
-            "dislikes",
         ]
 
     def get_likes_count(self, instance: Any) -> Any:
@@ -149,12 +156,6 @@ class ArticleFavoriteSerializer(serializers.ModelSerializer):
                 "favorited": True,
                 "unfavorited": False,
             }
-        if request.user in instance.dislikes.all():
-            return {
-                **representation,
-                "favorited": False,
-                "unfavorited": True,
-            }
         return {**representation, "favorited": False, "unfavorited": False}
 
 
@@ -185,11 +186,19 @@ class ArticleUnFavoriteSerializer(serializers.ModelSerializer):
             "author",
         )
         read_only_fields = [
+            "lookup_id",
+            "slug",
+            "title",
+            "description",
+            "image",
+            "body",
+            "tags",
+            "is_hidden",
+            "likes_count",
+            "dislikes_count",
             "created_at",
             "updated_at",
             "author",
-            "likes",
-            "dislikes",
         ]
 
     def get_likes_count(self, instance: Any) -> Any:
@@ -211,16 +220,9 @@ class ArticleUnFavoriteSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance: Any) -> Any:
-
         """check if the user liked or disliked an article and return favorited and unfavorited status"""
         request = self.context.get("request")
         representation = super().to_representation(instance)
-        if request.user in instance.likes.all():
-            return {
-                **representation,
-                "favorited": True,
-                "unfavorited": False,
-            }
         if request.user in instance.dislikes.all():
             return {
                 **representation,
