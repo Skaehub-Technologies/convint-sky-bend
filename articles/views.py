@@ -8,6 +8,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from articles.filters import AuthorFilter
 from articles.models import Article
 from articles.permissions import IsAuthorEditorOrReadOnly
 from articles.serializers import ArticleSerializer
@@ -19,15 +20,16 @@ class ArticleListView(generics.ListCreateAPIView):
     queryset = Article.objects.all()
     renderer_classes = (JSONRenderer,)
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = [
+    filterset_class = AuthorFilter
+
+    search_fields = [
         "favorited",
         "body",
         "title",
-        "is_hidden",
         "description",
+        "author__username",
     ]
-    search_fields = ["favorited", "body", "title", "is_hidden", "description"]
-    ordering_fields = ["updated_at"]
+    ordering_fields = ["-updated_at"]
 
 
 class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -36,16 +38,6 @@ class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "slug"
     queryset = Article.objects.all()
     renderer_classes = (JSONRenderer,)
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = [
-        "favorited",
-        "body",
-        "title",
-        "is_hidden",
-        "description",
-    ]
-    search_fields = ["favorited", "body", "title", "is_hidden", "description"]
-    ordering_fields = ["updated_at"]
 
     def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """return custom response for DELETE request"""
