@@ -25,6 +25,4 @@ def sample_data() -> dict:
         "image": sample_image(),
         "is_hidden": False,
         "tags": f'["{fake.word()}", "{fake.word()}"]',
-        "favorited": False,
-        "favoritesCount": 0,
     }

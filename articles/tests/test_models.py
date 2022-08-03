@@ -15,8 +15,6 @@ class TestArticleModel(TestCase):
             "body": fake.text(),
             "image": fake.image_url(),
             "is_hidden": False,
-            "favorited": False,
-            "favoritesCount": 0,
         }
 
     def test_create_article(self) -> None:
@@ -26,8 +24,6 @@ class TestArticleModel(TestCase):
         self.assertEqual(article.body, self.data["body"])
         self.assertEqual(article.image, self.data["image"])
         self.assertEqual(article.is_hidden, self.data["is_hidden"])
-        self.assertEqual(article.favorited, self.data["favorited"])
-        self.assertEqual(article.favoritesCount, self.data["favoritesCount"])
 
     def test_str_article(self) -> None:
         article = Article.objects.create(**self.data)

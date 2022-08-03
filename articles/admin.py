@@ -8,8 +8,6 @@ class ArticleAdmin(admin.ModelAdmin):
         "title",
         "slug",
         "author",
-        "favorited",
-        "favoritesCount",
         "is_hidden",
     )
     list_filter = ("created_at", "updated_at")
