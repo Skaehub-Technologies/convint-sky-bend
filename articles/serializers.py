@@ -133,7 +133,7 @@ class ArticleFavoriteSerializer(serializers.ModelSerializer):
         return instance.dislikes.count()
 
 
-class ArticleFavoriteSerializer(ArticleFavoriteSerializer):
+class FavoriteSerializer(ArticleFavoriteSerializer):
     def update(self, instance: Any, validated_data: Any) -> Any:
         """update the likes of an article"""
         request = self.context.get("request")
@@ -161,7 +161,7 @@ class ArticleFavoriteSerializer(ArticleFavoriteSerializer):
         return {**representation, "favorited": False, "unfavorited": False}
 
 
-class ArticleUnFavoriteSerializer(ArticleFavoriteSerializer):
+class UnFavoriteSerializer(ArticleFavoriteSerializer):
     def update(self, instance: Any, validated_data: Any) -> Any:
         """update the dislikes of an article"""
         request = self.context.get("request")

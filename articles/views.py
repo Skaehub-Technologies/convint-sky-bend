@@ -12,9 +12,9 @@ from rest_framework.response import Response
 from articles.models import Article
 from articles.permissions import IsAuthorEditorOrReadOnly
 from articles.serializers import (  # type: ignore[attr-defined]
-    ArticleFavoriteSerializer,
     ArticleSerializer,
-    ArticleUnFavoriteSerializer,
+    FavoriteSerializer,
+    UnFavoriteSerializer,
 )
 
 
@@ -43,7 +43,7 @@ class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class ArticleFavoriteView(generics.UpdateAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = ArticleFavoriteSerializer
+    serializer_class = FavoriteSerializer
     lookup_field = "slug"
     queryset = Article.objects.all()
     renderer_classes = (JSONRenderer,)
@@ -51,7 +51,7 @@ class ArticleFavoriteView(generics.UpdateAPIView):
 
 class ArticleUnFavoriteView(generics.UpdateAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = ArticleUnFavoriteSerializer
+    serializer_class = UnFavoriteSerializer
     lookup_field = "slug"
     queryset = Article.objects.all()
     renderer_classes = (JSONRenderer,)
