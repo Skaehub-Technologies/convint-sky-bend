@@ -132,6 +132,8 @@ class ArticleFavoriteSerializer(serializers.ModelSerializer):
     def get_dislikes_count(self, instance: Any) -> Any:
         return instance.dislikes.count()
 
+
+class ArticleFavoriteSerializer(ArticleFavoriteSerializer):
     def update(self, instance: Any, validated_data: Any) -> Any:
         """update the likes of an article"""
         request = self.context.get("request")
@@ -159,54 +161,7 @@ class ArticleFavoriteSerializer(serializers.ModelSerializer):
         return {**representation, "favorited": False, "unfavorited": False}
 
 
-class ArticleUnFavoriteSerializer(serializers.ModelSerializer):
-    likes = UserSerializer(many=True, required=False, read_only=True)
-    dislikes = UserSerializer(many=True, required=False, read_only=True)
-    tags = TagListSerializerField()
-    likes_count = serializers.SerializerMethodField()
-    dislikes_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Article
-        fields = (
-            "lookup_id",
-            "slug",
-            "title",
-            "description",
-            "image",
-            "body",
-            "tags",
-            "is_hidden",
-            "likes_count",
-            "dislikes_count",
-            "likes",
-            "dislikes",
-            "created_at",
-            "updated_at",
-            "author",
-        )
-        read_only_fields = [
-            "lookup_id",
-            "slug",
-            "title",
-            "description",
-            "image",
-            "body",
-            "tags",
-            "is_hidden",
-            "likes_count",
-            "dislikes_count",
-            "created_at",
-            "updated_at",
-            "author",
-        ]
-
-    def get_likes_count(self, instance: Any) -> Any:
-        return instance.likes.count()
-
-    def get_dislikes_count(self, instance: Any) -> Any:
-        return instance.dislikes.count()
-
+class ArticleUnFavoriteSerializer(ArticleFavoriteSerializer):
     def update(self, instance: Any, validated_data: Any) -> Any:
         """update the dislikes of an article"""
         request = self.context.get("request")
