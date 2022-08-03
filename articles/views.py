@@ -51,8 +51,8 @@ class CommentListView(generics.GenericAPIView):
         Returns:
             code: The return 201 created for success
         """
-        self.author = get_object_or_404(Profile, user=request.user)
-        self.article = get_object_or_404(Article, slug=slug)
+        author = get_object_or_404(Profile, user=request.user)
+        article = get_object_or_404(Article, slug=slug)
         start_index = validate_index(request.data.get("highlight_start"), slug)
         end_index = validate_index(request.data.get("highlight_end"), slug)
         if start_index and end_index:
@@ -61,11 +61,11 @@ class CommentListView(generics.GenericAPIView):
                 if start_index < end_index
                 else [int(end_index), int(start_index)]
             )
-            highlight_text = str(self.article.body[selected[0] : selected[1]])
+            highlight_text = str(article.body[selected[0] : selected[1]])
             request.data["highlight_text"] = highlight_text
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(author=self.author, article=self.article)
+        serializer.save(author=author, article=article)
         return Response(
             {
                 "message": "Comment added successfully",
@@ -80,10 +80,10 @@ class CommentListView(generics.GenericAPIView):
         Args:
             param1 (slug): this a slug for a particular article
         Returns:
-            code: The return 201 created for success
+            code: The return 200 success for success
         """
-        self.article = get_object_or_404(Article, slug=slug)
-        comments = Comment.objects.filter(article=self.article)
+        article = get_object_or_404(Article, slug=slug)
+        comments = Comment.objects.filter(article=article)
         comment_count = comments.count()
         serializer = self.serializer_class(comments, many=True)
         return Response(
@@ -92,7 +92,7 @@ class CommentListView(generics.GenericAPIView):
                 "comments": serializer.data,
                 "comment_count": comment_count,
             },
-            status=status.HTTP_201_CREATED,
+            status=status.HTTP_200_OK,
         )
 
 
@@ -110,8 +110,8 @@ class CommentDetailView(generics.GenericAPIView):
         Returns:
             code: The return 200 created for success
         """
-        self.comment = get_object_or_404(Comment, lookup_id=lookup_id)
-        serializer = self.serializer_class(self.comment)
+        comment = get_object_or_404(Comment, lookup_id=lookup_id)
+        serializer = self.serializer_class(comment)
         return Response(
             {
                 "message": "Comment fetched successfully",
@@ -120,7 +120,7 @@ class CommentDetailView(generics.GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
-    def put(self, request: Request, slug: str, lookup_id: str) -> Response:
+    def patch(self, request: Request, slug: str, lookup_id: str) -> Response:
         """
         update a comment on an article
         Args:
@@ -129,16 +129,16 @@ class CommentDetailView(generics.GenericAPIView):
         Returns:
             code: The return 201 created for success
         """
-        self.comment = get_object_or_404(Comment, lookup_id=lookup_id)
-        self.comment.body = request.data.get("body")  # type: ignore[assignment]
-        self.comment.save()
-        serializer = self.serializer_class(self.comment)
+        comment = get_object_or_404(Comment, lookup_id=lookup_id)
+        comment.body = request.data.get("body")  # type: ignore[assignment]
+        comment.save()
+        serializer = self.serializer_class(comment)
         return Response(
             {
                 "message": "Comment updated successfully",
                 "comment": serializer.data,
             },
-            status=status.HTTP_200_OK,
+            status=status.HTTP_201_CREATED,
         )
 
     def delete(self, request: Request, slug: str, lookup_id: str) -> Response:
@@ -148,11 +148,11 @@ class CommentDetailView(generics.GenericAPIView):
             slug: this a slug for a particular article
             lookup_id: this is the id of the comment
         Returns:
-            code: The return 200 deleted for success
+            code: The return 204 no content for success
         """
-        self.comment = get_object_or_404(Comment, lookup_id=lookup_id)
-        self.comment.delete()
+        comment = get_object_or_404(Comment, lookup_id=lookup_id)
+        comment.delete()
         return Response(
             {"message": "Comment deleted successfully"},
-            status=status.HTTP_200_OK,
+            status=status.HTTP_204_NO_CONTENT,
         )

@@ -50,6 +50,10 @@ class ArticleSerializer(TaggitSerializer, serializers.ModelSerializer):  # type:
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """
+    Serilaizes the comment model
+    """
+
     author = ProfileSerializer(read_only=True)
 
     class Meta:
@@ -57,11 +61,11 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = (
             "lookup_id",
             "body",
-            "createdAt",
-            "updatedAt",
+            "created_at",
+            "updated_at",
             "author",
             "highlight_start",
             "highlight_end",
             "highlight_text",
         )
-        read_only_fields = ("profile",)
+        read_only_fields = ("author",)

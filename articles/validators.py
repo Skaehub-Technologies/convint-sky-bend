@@ -7,6 +7,14 @@ from articles.models import Article
 
 
 def validate_index(index: Any, slug: str) -> Any:
+    """
+    Validates the index of the comment
+    Args:
+        article: the article object
+        slug: The slug of the article
+    Returns:
+        The index of the comment
+    """
     article = get_object_or_404(Article, slug=slug)
     article_length = len(article.body)
     if index is None:

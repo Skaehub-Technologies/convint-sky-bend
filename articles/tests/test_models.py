@@ -46,7 +46,7 @@ class TestArticleModel(TestCase):
 
 class TestCommentModel(TestCase):
     def setUp(self) -> None:
-        adata = {
+        comment_data = {
             "title": fake.name(),
             "description": fake.text(),
             "body": fake.text(),
@@ -55,13 +55,13 @@ class TestCommentModel(TestCase):
             "favorited": False,
             "favoritesCount": 0,
         }
-        pdata = {
+        signup_data = {
             "username": fake.name(),
             "email": fake.email(),
             "password": fake.password(),
         }
-        article = Article.objects.create(**adata)
-        user = User.objects.create_user(**pdata)
+        article = Article.objects.create(**comment_data)
+        user = User.objects.create_user(**signup_data)
         profile = Profile.objects.create(user=user)
         self.data = {
             "body": fake.text(max_nb_chars=500),

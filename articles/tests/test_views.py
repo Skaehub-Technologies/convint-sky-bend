@@ -292,6 +292,9 @@ class TestCommentViews(APITestCase):
 
     @property
     def bearer_token(self) -> dict:
+        """
+        Returns a bearer token for the client
+        """
         login_url = reverse("login")
         response = self.client.post(
             login_url,
@@ -304,6 +307,9 @@ class TestCommentViews(APITestCase):
     def test_create_comment(
         self,
     ) -> None:
+        """
+        Test that a comment can be created
+        """
         response = self.client.post(
             reverse("comments", kwargs={"slug": self.article.slug}),
             data=self.data,
@@ -315,6 +321,9 @@ class TestCommentViews(APITestCase):
     def test_create_comment_without_authentication(
         self,
     ) -> None:
+        """
+        Test that a comment cannot be created without authentication
+        """
         response = self.client.post(
             reverse("comments", kwargs={"slug": self.article.slug}),
             data=self.data,
@@ -328,14 +337,30 @@ class TestCommentViews(APITestCase):
     def test_get_all_comments(
         self,
     ) -> None:
+        """
+        Test that all comments can be retrieved
+        """
         response = self.client.get(
-            reverse("comments", kwargs={"slug": self.article.slug})
+            reverse(
+                "comments",
+                kwargs={
+                    "slug": self.article.slug,
+                },
+            )
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.comment.body, str)
+        self.assertEqual(
+            json.loads(response.content).get("message"),
+            "Comments fetched successfully",
+        )
 
     def test_get_comment(
         self,
     ) -> None:
+        """
+        Test that a comment can be retrieved with a valid lookup_id
+        """
         response = self.client.get(
             reverse(
                 "comment-detail",
@@ -347,10 +372,18 @@ class TestCommentViews(APITestCase):
             **self.bearer_token,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.comment.body, str)
+        self.assertEqual(
+            json.loads(response.content).get("message"),
+            "Comment fetched successfully",
+        )
 
     def test_get_comment_without_authentication(
         self,
     ) -> None:
+        """
+        Test that a comment can be retrieved without authentication
+        """
         response = self.client.get(
             reverse(
                 "comment-detail",
@@ -361,10 +394,18 @@ class TestCommentViews(APITestCase):
             ),
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.comment.body, str)
+        self.assertEqual(
+            json.loads(response.content).get("message"),
+            "Comment fetched successfully",
+        )
 
     def test_get_comment_with_invalid_lookup_id(
         self,
     ) -> None:
+        """
+        Test that a comment cannot be retrieved with an invalid lookup_id
+        """
         with self.assertRaises(ValidationError):
             self.client.get(
                 reverse(
@@ -379,8 +420,11 @@ class TestCommentViews(APITestCase):
     def test_update_comment(
         self,
     ) -> None:
+        """
+        Test that a comment can be updated
+        """
         data = {"body": fake.text()}
-        response = self.client.put(
+        response = self.client.patch(
             reverse(
                 "comment-detail",
                 kwargs={
@@ -391,11 +435,18 @@ class TestCommentViews(APITestCase):
             data=data,
             **self.bearer_token,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            json.loads(response.content).get("message"),
+            "Comment updated successfully",
+        )
 
     def test_update_comment_without_authentication(
         self,
     ) -> None:
+        """
+        Test that a comment cannot be updated without authentication
+        """
         data = {"body": fake.text()}
         response = self.client.patch(
             reverse(
@@ -416,6 +467,9 @@ class TestCommentViews(APITestCase):
     def test_delete_comment(
         self,
     ) -> None:
+        """
+        Test that a comment can be deleted
+        """
         response = self.client.delete(
             reverse(
                 "comment-detail",
@@ -426,11 +480,14 @@ class TestCommentViews(APITestCase):
             ),
             **self.bearer_token,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_comment_without_authentication(
         self,
     ) -> None:
+        """
+        Test that a comment cannot be deleted without authentication
+        """
         response = self.client.delete(
             reverse(
                 "comment-detail",
@@ -499,6 +556,9 @@ class TestHighlightCommentViews(APITestCase):
     def test_create_highlight_comment(
         self,
     ) -> None:
+        """
+        Test that a text can be highlighted and commented on an article
+        """
 
         response = self.client.post(
             reverse("comments", kwargs={"slug": self.article.slug}),
@@ -507,10 +567,17 @@ class TestHighlightCommentViews(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            json.loads(response.content).get("message"),
+            "Comment added successfully",
+        )
 
     def test_highlight_comment_create_without_authentication(
         self,
     ) -> None:
+        """
+        Test that a comment cannot be created without authentication
+        """
         response = self.client.post(
             reverse("comments", kwargs={"slug": self.article.slug}),
             data=self.data,
@@ -524,6 +591,9 @@ class TestHighlightCommentViews(APITestCase):
     def test_highlight_comment_create_with_invalid_article(
         self,
     ) -> None:
+        """
+        Test that a comment cannot be created with an invalid article
+        """
         response = self.client.post(
             reverse("comments", kwargs={"slug": "am-here-to-see-the-error"}),
             data=self.data,
@@ -535,9 +605,12 @@ class TestHighlightCommentViews(APITestCase):
             "Not found.",
         )
 
-    def test_highlight_comment_create_with_invalid_highlight_start(
+    def test_invalid_highlight_start(
         self,
     ) -> None:
+        """
+        Test that a comment cannot be created with an invalid highlight start
+        """
         self.data["highlight_start"] = fake.pyint(
             min_value=len(self.article.body) + 1
         )
@@ -547,10 +620,17 @@ class TestHighlightCommentViews(APITestCase):
             **self.bearer_token,
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            json.loads(response.content)[0],
+            "Index must not exceed article length.",
+        )
 
     def test_highlight_comment_create_with_invalid_highlight_end(
         self,
     ) -> None:
+        """
+        Test that a comment cannot be created with an invalid highlight end
+        """
         self.data["highlight_end"] = fake.pyint(
             min_value=len(self.article.body) + 1
         )
@@ -564,7 +644,38 @@ class TestHighlightCommentViews(APITestCase):
     def test_get_highlight_comments(
         self,
     ) -> None:
+        """
+        Test that a comment can be retrieved with a valid article slug
+        """
         response = self.client.get(
             reverse("comments", kwargs={"slug": self.article.slug})
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.comment.body, str)
+        self.assertEqual(
+            json.loads(response.content).get("message"),
+            "Comments fetched successfully",
+        )
+
+    def test_detail_highlight_comment(
+        self,
+    ) -> None:
+        """
+        Test that a comment can be retrieved with a valid comment lookup_id
+        """
+
+        response = self.client.get(
+            reverse(
+                "comment-detail",
+                kwargs={
+                    "slug": self.article.slug,
+                    "lookup_id": self.comment.lookup_id,
+                },
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.comment.body, str)
+        self.assertEqual(
+            json.loads(response.content).get("message"),
+            "Comment fetched successfully",
+        )

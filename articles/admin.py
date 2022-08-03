@@ -29,13 +29,13 @@ class CommentAdmin(admin.ModelAdmin):
         "highlight_end",
         "highlight_text",
         "author",
-        "createdAt",
-        "updatedAt",
+        "created_at",
+        "updated_at",
     )
-    list_filter = ("createdAt", "updatedAt")
+    list_filter = ("created_at", "updated_at")
     search_fields = ("article", "author")
-    ordering = ("-createdAt",)
-    date_hierarchy = "createdAt"
+    ordering = ("-created_at",)
+    date_hierarchy = "created_at"
 
 
 admin.site.register(Comment, CommentAdmin)

@@ -49,7 +49,7 @@ def slug_pre_save(sender: Any, instance: Any, **kwargs: Any) -> None:
         instance.slug = slugify(f"{instance.title}-{instance.lookup_id}")
 
 
-class Comment(models.Model):
+class Comment(TimeStampedModel):
     """
     Handles CRUD on a comment that has been made on article
     """
@@ -58,8 +58,6 @@ class Comment(models.Model):
         default=uuid.uuid4, editable=False, unique=True, max_length=255
     )
     body = models.TextField(max_length=500, blank=False, null=False)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
     highlight_start = models.PositiveIntegerField(null=True, blank=True)
     highlight_end = models.PositiveIntegerField(null=True, blank=True)
     highlight_text = models.TextField(blank=True, null=True)
@@ -71,7 +69,7 @@ class Comment(models.Model):
     )
 
     class Meta:
-        ordering = ["-createdAt"]
+        ordering = ["-created_at"]
 
     def __str__(self) -> str:
-        return self.body
+        return self.article.title
