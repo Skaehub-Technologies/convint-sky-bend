@@ -5,7 +5,7 @@ from rest_framework import serializers
 from taggit.serializers import TaggitSerializer, TagListSerializerField
 
 from articles.models import Article, Comment
-from users.serializers import ProfileSerializer, UserSerializer
+from users.serializers import UserSerializer
 
 User = get_user_model()
 
@@ -54,7 +54,7 @@ class CommentSerializer(serializers.ModelSerializer):
     Serilaizes the comment model
     """
 
-    author = ProfileSerializer(read_only=True)
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Comment

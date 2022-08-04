@@ -1,5 +1,6 @@
 from typing import Any
 
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -11,7 +12,8 @@ from articles.models import Article, Comment
 from articles.permissions import IsAuthorEditorOrReadOnly
 from articles.serializers import ArticleSerializer, CommentSerializer
 from articles.validators import validate_index
-from users.models import Profile
+
+User = get_user_model()
 
 
 class ArticleListView(generics.ListCreateAPIView):
@@ -51,7 +53,7 @@ class CommentListView(generics.GenericAPIView):
         Returns:
             code: The return 201 created for success
         """
-        author = get_object_or_404(Profile, user=request.user)
+        author = get_object_or_404(User, user=request.user)
         article = get_object_or_404(Article, slug=slug)
         start_index = validate_index(request.data.get("highlight_start"), slug)
         end_index = validate_index(request.data.get("highlight_end"), slug)

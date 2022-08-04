@@ -11,7 +11,6 @@ from django.utils.text import slugify
 from taggit.managers import TaggableManager
 
 from users.abstracts import TimeStampedModel
-from users.models import Profile
 
 User = get_user_model()
 
@@ -62,7 +61,7 @@ class Comment(TimeStampedModel):
     highlight_end = models.PositiveIntegerField(null=True, blank=True)
     highlight_text = models.TextField(blank=True, null=True)
     author = models.ForeignKey(
-        Profile, on_delete=models.CASCADE, related_name="authored"
+        User, on_delete=models.CASCADE, related_name="authored"
     )
     article = models.ForeignKey(
         Article, on_delete=models.CASCADE, related_name="article"
