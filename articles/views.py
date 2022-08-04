@@ -30,7 +30,7 @@ class ArticleListView(generics.ListCreateAPIView):
     filterset_class = AuthorFilter
 
     search_fields = [
-        "favorited",
+        "likes",
         "body",
         "title",
         "description",

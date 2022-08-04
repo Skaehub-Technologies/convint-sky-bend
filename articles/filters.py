@@ -11,4 +11,4 @@ class AuthorFilter(FilterSet):  # type:ignore[no-any-unimported]
 
     class Meta:
         model = Article
-        fields = ["favorited", "body", "title", "description", "author"]
+        fields = ["likes", "body", "title", "description", "author"]
