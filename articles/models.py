@@ -1,3 +1,4 @@
+import math
 import uuid
 from typing import Any
 
@@ -26,6 +27,7 @@ class Article(TimeStampedModel):
     body = models.TextField(blank=False, null=False)
     tags = TaggableManager()
     is_hidden = models.BooleanField(default=False)
+    reading_time = models.PositiveIntegerField(blank=True, null=True)
     likes = models.ManyToManyField(User, related_name="likes", blank=True)
     dislikes = models.ManyToManyField(
         User, related_name="dislikes", blank=True
@@ -45,3 +47,8 @@ class Article(TimeStampedModel):
 def slug_pre_save(sender: Any, instance: Any, **kwargs: Any) -> None:
     if instance.slug is None or instance.slug == "":
         instance.slug = slugify(f"{instance.title}-{instance.lookup_id}")
+
+
+@receiver(pre_save, sender=Article)
+def reading_time_pre_save(sender: Any, instance: Any, **kwargs: Any) -> None:
+    instance.reading_time = math.ceil(instance.body.count(" ") // 200)
