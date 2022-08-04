@@ -3,18 +3,28 @@ from typing import Any
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from articles.models import Article, Comment
 from articles.permissions import IsAuthorEditorOrReadOnly
-from articles.serializers import ArticleSerializer, CommentSerializer
+ 
 from articles.validators import validate_index
 
-User = get_user_model()
 
+from articles.serializers import (  # type: ignore[attr-defined]
+    ArticleSerializer,
+    FavoriteSerializer,
+    UnFavoriteSerializer,
+    CommentSerializer
+)
+
+User = get_user_model()
 
 class ArticleListView(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -37,6 +47,7 @@ class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
             {"message": "Article deleted successfully"},
             status=status.HTTP_204_NO_CONTENT,
         )
+
 
 
 class CommentListView(generics.GenericAPIView):
@@ -158,3 +169,19 @@ class CommentDetailView(generics.GenericAPIView):
             {"message": "Comment deleted successfully"},
             status=status.HTTP_204_NO_CONTENT,
         )
+
+class ArticleFavoriteView(generics.UpdateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = FavoriteSerializer
+    lookup_field = "slug"
+    queryset = Article.objects.all()
+    renderer_classes = (JSONRenderer,)
+
+
+class ArticleUnFavoriteView(generics.UpdateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UnFavoriteSerializer
+    lookup_field = "slug"
+    queryset = Article.objects.all()
+    renderer_classes = (JSONRenderer,)
+

@@ -5,6 +5,8 @@ from articles.views import (
     ArticleListView,
     CommentDetailView,
     CommentListView,
+    ArticleFavoriteView,
+    ArticleUnFavoriteView,
 )
 
 urlpatterns = [
@@ -23,5 +25,14 @@ urlpatterns = [
         "articles/<slug:slug>/comments/<str:lookup_id>/",
         CommentDetailView.as_view(),
         name="comment-detail",
+    ),
+    path("articles/<slug:slug>/favorite/",
+        ArticleFavoriteView.as_view(),
+        name="article-favorite",
+    ),
+    path(
+        "articles/<slug:slug>/unfavorite/",
+        ArticleUnFavoriteView.as_view(),
+        name="article-unfavorite",
     ),
 ]

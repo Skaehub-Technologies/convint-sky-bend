@@ -12,4 +12,5 @@ omit =
     */asgi.py
     */settings/*
     */urls.py
+    */admin.py
 show_missing = True
