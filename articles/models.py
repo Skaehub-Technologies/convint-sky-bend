@@ -52,3 +52,29 @@ def slug_pre_save(sender: Any, instance: Any, **kwargs: Any) -> None:
 @receiver(pre_save, sender=Article)
 def reading_time_pre_save(sender: Any, instance: Any, **kwargs: Any) -> None:
     instance.reading_time = math.ceil(instance.body.count(" ") // 200)
+
+
+class Comment(TimeStampedModel):
+    """
+    Handles CRUD on a comment that has been made on article
+    """
+
+    lookup_id = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True, max_length=255
+    )
+    body = models.TextField(max_length=500, blank=False, null=False)
+    highlight_start = models.PositiveIntegerField(null=True, blank=True)
+    highlight_end = models.PositiveIntegerField(null=True, blank=True)
+    highlight_text = models.TextField(blank=True, null=True)
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="user"
+    )
+    article = models.ForeignKey(
+        Article, on_delete=models.CASCADE, related_name="article"
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return self.article.title
