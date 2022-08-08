@@ -11,7 +11,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from articles.filters import AuthorFilter
+from articles.filters import ArticleFilter
 from articles.models import Article
 from articles.permissions import IsAuthorEditorOrReadOnly
 from articles.serializers import (  # type: ignore[attr-defined]
@@ -27,16 +27,16 @@ class ArticleListView(generics.ListCreateAPIView):
     queryset = Article.objects.all()
     renderer_classes = (JSONRenderer,)
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_class = AuthorFilter
+    filterset_class = ArticleFilter
 
     search_fields = [
-        "likes",
         "body",
         "title",
         "description",
         "author__username",
+        "lookup_id",
+        "tags__name",
     ]
-    ordering_fields = ["-updated_at"]
 
 
 class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):

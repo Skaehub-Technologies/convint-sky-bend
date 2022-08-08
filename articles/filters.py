@@ -4,11 +4,14 @@ from django_filters import FilterSet
 from articles.models import Article
 
 
-class AuthorFilter(FilterSet):  # type:ignore[no-any-unimported]
-    author__username = django_filters.CharFilter(
-        field_name="author", lookup_expr="icontains"
+class ArticleFilter(FilterSet):  # type:ignore[no-any-unimported]
+    author = django_filters.CharFilter(
+        field_name="author__username", lookup_expr="icontains"
+    )
+    tags = django_filters.CharFilter(
+        field_name="tags__name", lookup_expr="icontains"
     )
 
     class Meta:
         model = Article
-        fields = ["likes", "body", "title", "description", "author"]
+        fields = ["tags", "author"]
