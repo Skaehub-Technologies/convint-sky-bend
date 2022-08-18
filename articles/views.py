@@ -1,6 +1,8 @@
 from typing import Any
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
@@ -9,6 +11,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from articles.filters import ArticleFilter
 from articles.models import Article
 from articles.permissions import IsAuthorEditorOrReadOnly
 from articles.serializers import (  # type: ignore[attr-defined]
@@ -23,6 +26,17 @@ class ArticleListView(generics.ListCreateAPIView):
     serializer_class = ArticleSerializer
     queryset = Article.objects.all()
     renderer_classes = (JSONRenderer,)
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = ArticleFilter
+
+    search_fields = [
+        "body",
+        "title",
+        "description",
+        "author__username",
+        "lookup_id",
+        "tags__name",
+    ]
 
 
 class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
